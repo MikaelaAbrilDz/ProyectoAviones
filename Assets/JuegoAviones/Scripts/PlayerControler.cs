@@ -20,14 +20,15 @@ public class PlayerControler : MonoBehaviour
     void Update()
     {
         Movement();
-        print(speed);
     }
     private void Movement()
     {        
+        //APLICAR EL MOVIMIENTO AL TRANSFORM
         transform.position += transform.forward * Time.deltaTime * speed;
         transform.eulerAngles = new Vector3(transform.eulerAngles.x + rotation.y * Time.deltaTime * 50, transform.eulerAngles.y + rotation.x * Time.deltaTime * 50,
             inclination);
 
+        //CÁLCULOS PARA INCLINACIÓN SMOOTH
         counter += Time.deltaTime * 0.005f / (Mathf.Abs(rotation.x) + 5f);
         inclination = Mathf.Lerp(inclination, -rotation.x * 15, counter);
 
