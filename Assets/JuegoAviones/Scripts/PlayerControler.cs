@@ -12,7 +12,7 @@ public class PlayerControler : MonoBehaviour
     float inclination = 0;
     float speed = 15f;
     float counter = 0;
-    int maxInclination = 25;
+    int maxInclination = 50;
 
     private void Start()
     {
@@ -30,7 +30,7 @@ public class PlayerControler : MonoBehaviour
             inclination);
 
         //CÁLCULOS PARA INCLINACIÓN SMOOTH
-        counter += Time.deltaTime * 0.005f / (Mathf.Abs(rotation.x) + 5f);
+        counter += Time.deltaTime * 0.001f / (Mathf.Abs(rotation.x) + 5f);
         inclination = Mathf.Lerp(inclination, -rotation.x * maxInclination, counter);
 
         if (inclination == rotation.x) counter = 0;
