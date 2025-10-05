@@ -11,8 +11,8 @@ public class PlayerControler : MonoBehaviour
     Vector2 rotation;
     float inclination = 0;
     float speed = 15f;
-    float counter = 0;
     int maxInclination = 50;
+    float inclinationSpeed = 50f;
 
     private void Start()
     {
@@ -30,10 +30,7 @@ public class PlayerControler : MonoBehaviour
             inclination);
 
         //CÁLCULOS PARA INCLINACIÓN SMOOTH
-        counter += Time.deltaTime * 0.001f / (Mathf.Abs(rotation.x) + 5f);
-        inclination = Mathf.Lerp(inclination, -rotation.x * maxInclination, counter);
-
-        if (inclination == rotation.x) counter = 0;
+        inclination = Mathf.MoveTowards(inclination, -rotation.x * maxInclination, Time.deltaTime * inclinationSpeed);
     }
     private void OnMove(InputValue movementValue)
     {
