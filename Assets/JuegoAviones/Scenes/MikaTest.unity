@@ -8664,6 +8664,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 5718454816166052870, guid: f466cb65e808857499a419cfac27cc19, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: -2017512842756544740, guid: b01fa8ecbf1da1242b353570c446152b, type: 3}
     - target: {fileID: 6185450675836226508, guid: f466cb65e808857499a419cfac27cc19, type: 3}
       propertyPath: speedCam
       value: 
