@@ -7,6 +7,10 @@ using System.Collections;
 public class PlayerControler : MonoBehaviour
 {
     [SerializeField] CinemachineCamera speedCam;
+    [SerializeField] LayerMask buildingLayerMask; // Capa para los edificios
+    [SerializeField] float raycastDistance = 10f; // Distancia del raycast
+    [SerializeField] Transform[] raycastOrigins; // Puntos de origen para los raycasts //NO LOS HEMOS PUESTO, DE MOMENTO LO COGE DESDE EL CENTRO DEL AVION
+
 
     Vector2 rotation;
     float inclination = 0;
@@ -15,12 +19,18 @@ public class PlayerControler : MonoBehaviour
 
     private void Start()
     {
-
+        // Si no se asignan puntos de origen, usar la posición del avión --> (ESTO ES LO QUE HACE)
+        if (raycastOrigins == null || raycastOrigins.Length == 0)
+        {
+            raycastOrigins = new Transform[] { transform };
+        }
     }
     void Update()
     {
         Movement();
+        CheckForBuildings();
     }
+
     private void Movement()
     {        
         //APLICAR EL MOVIMIENTO AL TRANSFORM
@@ -52,5 +62,41 @@ public class PlayerControler : MonoBehaviour
             speedCam.Priority = -1;
             
         }
+    }
+
+    private void CheckForBuildings()
+    {
+        foreach (Transform origin in raycastOrigins)
+        {
+            // Lanzar raycast hacia adelante desde cada punto de origen
+            Ray ray = new Ray(origin.position, origin.forward);
+            RaycastHit hit;
+
+            if (Physics.Raycast(ray, out hit, raycastDistance, buildingLayerMask))
+            {
+                Debug.DrawRay(origin.position, origin.forward * raycastDistance, Color.red);
+
+                // Si golpea un edificio, destruir el avión
+                DestroyAirplane();
+                return; 
+            }
+            else
+            {
+                Debug.DrawRay(origin.position, origin.forward * raycastDistance, Color.green);
+            }
+        }
+
+
+    }
+
+    private void DestroyAirplane()
+    {
+        Debug.Log("YETS destruido :(");
+
+        //Para otro dia metemos efectos
+        // Instantiate(explosionEffect, transform.position, transform.rotation);
+
+        // Destruye el avión
+        Destroy(gameObject);  
     }
 }
