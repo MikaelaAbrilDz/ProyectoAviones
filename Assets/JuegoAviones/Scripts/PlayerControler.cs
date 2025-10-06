@@ -14,7 +14,7 @@ public class PlayerControler : MonoBehaviour
 
     Vector2 rotation;
     float inclination = 0;
-    float speed = 15f;
+    float speed = 35f;
     int maxInclination = 50;
     float inclinationSpeed = 50f;
 
@@ -51,12 +51,12 @@ public class PlayerControler : MonoBehaviour
     {
         if (turbo.isPressed)
         {
-            speed = 30f;
+            speed = 70f;
             speedCam.Priority = 1;
         }
         else
         {
-            speed = 15f;
+            speed = 35f;
             speedCam.Priority = -1;
             
         }
