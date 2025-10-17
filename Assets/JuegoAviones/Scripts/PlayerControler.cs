@@ -33,12 +33,20 @@ public class PlayerControler : NetworkBehaviour
         foreach (var camera in cameraObj.GetComponentsInChildren<CinemachineCamera>())
         {
             camera.Target.TrackingTarget = camFollowed;
+            camera.Target.LookAtTarget = camFollowed;
             if (camera.name == "PlayerCamSpeed") speedCam = camera;
+        }
+        cameraObj.SetActive(IsOwner);
+
+        if (!IsOwner)
+        {
+            GetComponent<PlayerInput>().enabled = false;
+            enabled = false;
         }
     }
     void Update()
     {
-        if (IsOwner) Movement();        
+        Movement();        
         CheckForBuildings();
     }
 
