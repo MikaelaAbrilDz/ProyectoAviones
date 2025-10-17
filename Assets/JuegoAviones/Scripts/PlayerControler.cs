@@ -1,15 +1,17 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Unity.Cinemachine;
-using UnityEngine.InputSystem.Controls;
-using System.Collections;
+using Unity.Netcode;
 
-public class PlayerControler : MonoBehaviour
+public class PlayerControler : NetworkBehaviour
 {
     [SerializeField] CinemachineCamera speedCam;
     [SerializeField] LayerMask buildingLayerMask; // Capa para los edificios
     [SerializeField] float raycastDistance = 10f; // Distancia del raycast
     [SerializeField] Transform[] raycastOrigins; // Puntos de origen para los raycasts //NO LOS HEMOS PUESTO, DE MOMENTO LO COGE DESDE EL CENTRO DEL AVION
+    [SerializeField] Transform camFollowed;
+    [SerializeField] GameObject cameraPrefab;
+    GameObject cameraObj;
 
 
     Vector2 rotation;
@@ -25,14 +27,22 @@ public class PlayerControler : MonoBehaviour
         {
             raycastOrigins = new Transform[] { transform };
         }
+
+        // Generar cámara
+        cameraObj = Instantiate(cameraPrefab);
+        foreach (var camera in cameraObj.GetComponentsInChildren<CinemachineCamera>())
+        {
+            camera.Target.TrackingTarget = camFollowed;
+            if (camera.name == "PlayerCamSpeed") speedCam = camera;
+        }
     }
     void Update()
     {
-        Movement();
+        if (IsOwner) Movement();        
         CheckForBuildings();
     }
 
-    private void Movement()
+private void Movement()
     {        
         //APLICAR EL MOVIMIENTO AL TRANSFORM
         transform.position += transform.forward * Time.deltaTime * speed;
