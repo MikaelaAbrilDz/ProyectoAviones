@@ -16,7 +16,7 @@ public class PlayerControler : NetworkBehaviour
 
     Vector2 rotation;
     float inclination = 0;
-    float speed = 35f;
+    float speed = 10f;
     int maxInclination = 50;
     float inclinationSpeed = 50f;
 
@@ -69,12 +69,12 @@ private void Movement()
     {
         if (turbo.isPressed)
         {
-            speed = 70f;
+            speed = 25f;
             speedCam.Priority = 1;
         }
         else
         {
-            speed = 35f;
+            speed = 10f;
             speedCam.Priority = -1;
             
         }
