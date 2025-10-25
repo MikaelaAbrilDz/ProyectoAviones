@@ -13,6 +13,7 @@ public class PlayerControler : NetworkBehaviour
     [SerializeField] GameObject cameraPrefab;
     GameObject cameraObj;
 
+    public GameObject explosionEffect;
 
     Vector2 rotation;
     float inclination = 0;
@@ -23,10 +24,10 @@ public class PlayerControler : NetworkBehaviour
     private void Start()
     {
         // Si no se asignan puntos de origen, usar la posición del avión --> (ESTO ES LO QUE HACE)
-        if (raycastOrigins == null || raycastOrigins.Length == 0)
+        /*if (raycastOrigins == null || raycastOrigins.Length == 0)
         {
             raycastOrigins = new Transform[] { transform };
-        }
+        }*/
 
         // Generar cámara
         cameraObj = Instantiate(cameraPrefab);
@@ -109,8 +110,8 @@ private void Movement()
     {
         Debug.Log("YETS destruido :(");
 
-        //Para otro dia metemos efectos
-        // Instantiate(explosionEffect, transform.position, transform.rotation);
+        //Efecto explosión al destruirse el avión
+        Instantiate(explosionEffect, transform.position, transform.rotation);
 
         // Destruye el avión
         Destroy(gameObject);  
