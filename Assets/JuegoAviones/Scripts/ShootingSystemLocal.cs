@@ -2,7 +2,7 @@ using UnityEngine;
 using Unity.Netcode;
 using System.Collections;
 
-public class ShootingSystem : NetworkBehaviour
+public class ShootingSystemLocal : MonoBehaviour
 {
     [Header("Configuración Láser Metralleta")]
     [SerializeField] private Transform firePoint; // Punto de origen del láser
@@ -26,12 +26,12 @@ public class ShootingSystem : NetworkBehaviour
     private AudioSource audioSource;
     private bool isFiring = false;
     private float fireDelay;
-    private PlayerControler playerController;
+    private PlayerControllerOnline playerController;
 
     private void Start()
     {
         // Obtener referencia al PlayerController
-        playerController = GetComponent<PlayerControler>();
+        playerController = GetComponent<PlayerControllerOnline>();
         
         // Configurar AudioSource
         audioSource = GetComponent<AudioSource>();
@@ -60,7 +60,7 @@ public class ShootingSystem : NetworkBehaviour
     private void Update()
     {
         // Solo permitir disparar si somos el dueño del objeto
-        if (!IsOwner) return;
+        //if (!IsOwner) return;
         
         // Detectar input de disparo
         if (Input.GetMouseButtonDown(0))
@@ -107,7 +107,7 @@ public class ShootingSystem : NetworkBehaviour
     private void ShootLaser()
     {
         // Solo el cliente que es dueño puede disparar
-        if (IsOwner)
+        //if (IsOwner)
         {
             ShootLaserServerRpc();
         }

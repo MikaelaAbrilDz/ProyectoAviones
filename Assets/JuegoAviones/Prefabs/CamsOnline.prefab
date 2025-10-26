@@ -398,7 +398,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8979427267024496070}
   m_Layer: 0
-  m_Name: Cams
+  m_Name: CamsOnline
   m_TagString: CameraSystem
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -3,7 +3,7 @@ using UnityEngine.InputSystem;
 using Unity.Cinemachine;
 using Unity.Netcode;
 
-public class PlayerControler : NetworkBehaviour
+public class PlayerControllerOnline : NetworkBehaviour
 {
     [SerializeField] CinemachineCamera speedCam;
     [SerializeField] LayerMask buildingLayerMask; // Capa para los edificios
