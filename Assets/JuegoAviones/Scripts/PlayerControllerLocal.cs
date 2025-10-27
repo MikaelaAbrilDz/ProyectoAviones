@@ -1,6 +1,6 @@
 using System.Globalization;
 using Unity.Cinemachine;
-using Unity.Cinemachine.Editor;
+using UnityEngine.SceneManagement;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -21,6 +21,7 @@ public class PlayerControllerLocal : MonoBehaviour
     float speed = 10f;
     int maxInclination = 50;
     float inclinationSpeed = 50f;
+    bool isDead = false;
 
     private void Start()
     {
@@ -34,7 +35,7 @@ public class PlayerControllerLocal : MonoBehaviour
     }
     void Update()
     {
-        Movement();
+        if (!isDead) Movement();
         CheckForBuildings();
     }
 
@@ -111,12 +112,21 @@ public class PlayerControllerLocal : MonoBehaviour
 
     private void DestroyAirplane()
     {
-        Debug.Log("YETS destruido :(");
+        if (isDead) return;
 
+        isDead = true;
         //Efecto explosión al destruirse el avión
         Instantiate(explosionEffect, transform.position, transform.rotation);
 
-        // Destruye el avión
-        Destroy(gameObject);
+        // Finds object by name and deactivates it
+        foreach(var child in GetComponentsInChildren<MeshRenderer>())
+        {
+            child.gameObject.SetActive(false);
+        }
+        Invoke("RestartGame", 1f);
+    }
+    private void RestartGame()
+    {
+        SceneManager.LoadScene("LocalMultiScene");
     }
 }
