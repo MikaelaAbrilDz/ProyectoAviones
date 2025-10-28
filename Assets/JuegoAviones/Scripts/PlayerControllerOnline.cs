@@ -1,7 +1,9 @@
-using UnityEngine;
-using UnityEngine.InputSystem;
+using System.Globalization;
 using Unity.Cinemachine;
 using Unity.Netcode;
+using UnityEngine.InputSystem;
+using UnityEngine;
+
 
 public class PlayerControllerOnline : NetworkBehaviour
 {
@@ -14,6 +16,9 @@ public class PlayerControllerOnline : NetworkBehaviour
     GameObject cameraObj;
 
     public GameObject explosionEffect;
+
+    //Llamada la scrip de ShootingSystemOnline
+    ShootingSystemOnline shootingSystem;
 
     Vector2 rotation;
     float inclination = 0;
@@ -28,6 +33,9 @@ public class PlayerControllerOnline : NetworkBehaviour
         {
             raycastOrigins = new Transform[] { transform };
         }*/
+
+        // OBTENER LA REFERENCIA AL SHOOTING SYSTEM
+        shootingSystem = GetComponent<ShootingSystemOnline>();
 
         // Generar cámara
         cameraObj = Instantiate(cameraPrefab);
@@ -47,12 +55,11 @@ public class PlayerControllerOnline : NetworkBehaviour
     }
     void Update()
     {
-        Movement();        
+        Movement();
         CheckForBuildings();
     }
-
-private void Movement()
-    {        
+    private void Movement()
+    {
         //APLICAR EL MOVIMIENTO AL TRANSFORM
         transform.position += transform.forward * Time.deltaTime * speed;
         transform.eulerAngles = new Vector3(transform.eulerAngles.x + rotation.y * Time.deltaTime * 50, transform.eulerAngles.y + rotation.x * Time.deltaTime * 50,
@@ -77,9 +84,35 @@ private void Movement()
         {
             speed = 10f;
             speedCam.Priority = -1;
-            
+
         }
     }
+
+    //Disparo normal
+    private void OnAttack_0(InputValue attack)
+    {
+        if (attack.isPressed)
+        {
+            shootingSystem.StartFiring();
+            Debug.Log("Pium pium...");
+            speed = 3f;
+        }
+        else
+        {
+            speed = 10f;
+            shootingSystem.StopFiring();
+            Debug.Log("No Pium pium...");
+
+        }
+    }
+    //Disparo misil (aun no programado)
+    /*private void OnAttack_1(InputValue attack1)
+    {
+        if (attack1.isPressed)
+        {
+            Debug.Log("Misilazo");
+        }
+    }*/
 
     private void CheckForBuildings()
     {
@@ -95,7 +128,7 @@ private void Movement()
 
                 // Si golpea un edificio, destruir el avión
                 DestroyAirplane();
-                return; 
+                return;
             }
             else
             {
@@ -105,7 +138,6 @@ private void Movement()
 
 
     }
-
     private void DestroyAirplane()
     {
         Debug.Log("YETS destruido :(");
@@ -114,6 +146,6 @@ private void Movement()
         Instantiate(explosionEffect, transform.position, transform.rotation);
 
         // Destruye el avión
-        Destroy(gameObject);  
+        Destroy(gameObject);
     }
 }

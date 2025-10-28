@@ -10,19 +10,19 @@ public class ShootingSystemOnline : NetworkBehaviour
     [SerializeField] private float laserRange = 100f;
     [SerializeField] private float laserDuration = 0.1f;
     [SerializeField] private float damage = 10f;
-    
+
     [Header("Efectos Visuales")]
     [SerializeField] private LineRenderer laserLine;
     [SerializeField] private ParticleSystem muzzleFlash;
     //[SerializeField] private GameObject hitEffect;
-    
+
     //[Header("Audio")]
     //[SerializeField] private AudioClip laserSound;
     //[SerializeField] private AudioClip hitSound;
-    
+
     [Header("Configuración de Layers")]
     [SerializeField] private LayerMask hitLayers = ~0; // Todos los layers por defecto
-    
+
     private AudioSource audioSource;
     private bool isFiring = false;
     private float fireDelay;
@@ -32,44 +32,28 @@ public class ShootingSystemOnline : NetworkBehaviour
     {
         // Obtener referencia al PlayerController
         playerController = GetComponent<PlayerControllerOnline>();
-        
+
         // Configurar AudioSource
         audioSource = GetComponent<AudioSource>();
         if (audioSource == null)
         {
             audioSource = gameObject.AddComponent<AudioSource>();
         }
-        
+
         // Calcular delay entre disparos
         fireDelay = 1f / fireRate;
-        
+
         // Configurar LineRenderer si existe
         if (laserLine != null)
         {
             laserLine.positionCount = 2;
             laserLine.enabled = false;
         }
-        
+
         // Verificar que tenemos el firePoint asignado
         if (firePoint == null)
         {
             Debug.LogError("FirePoint no asignado en MachineGunLaser!");
-        }
-    }
-
-    private void Update()
-    {
-        // Solo permitir disparar si somos el dueño del objeto
-        if (!IsOwner) return;
-        
-        // Detectar input de disparo
-        if (Input.GetMouseButtonDown(0))
-        {
-            StartFiring();
-        }
-        else if (Input.GetMouseButtonUp(0))
-        {
-            StopFiring();
         }
     }
 
@@ -87,7 +71,7 @@ public class ShootingSystemOnline : NetworkBehaviour
     {
         isFiring = false;
         StopAllCoroutines();
-        
+
         // Ocultar láser inmediatamente al dejar de disparar
         if (laserLine != null)
         {
@@ -106,61 +90,68 @@ public class ShootingSystemOnline : NetworkBehaviour
 
     private void ShootLaser()
     {
-        // Solo el cliente que es dueño puede disparar
+        // Mostrar efectos visuales inmediatamente en el cliente local
+        ShowLaserEffectsLocally();
+
+        // Luego enviar al servidor para replicación
         if (IsOwner)
         {
             ShootLaserServerRpc();
         }
     }
 
-    [ServerRpc]
-    private void ShootLaserServerRpc()
+    private void ShowLaserEffectsLocally()
     {
-        // Realizar raycast desde el servidor
+        // Hacer raycast local para efectos visuales inmediatos
         RaycastHit hit;
         Vector3 rayDirection = firePoint.forward;
         bool hasHit = Physics.Raycast(firePoint.position, rayDirection, out hit, laserRange, hitLayers);
 
-        // Procesar el impacto
+        Vector3 endPos = hasHit ? hit.point : firePoint.position + rayDirection * laserRange;
+
+        // Mostrar efecto de láser localmente
+        StartCoroutine(ShowLaserBriefly(firePoint.position, endPos));
+
+        // Efecto de muzzle flash local
+        if (muzzleFlash != null)
+        {
+            muzzleFlash.Play();
+        }
+
+        //Debug.Log($"Láser local - Start: {firePoint.position}, End: {endPos}, Hit: {hasHit}");
+    }
+
+    [ServerRpc]
+    private void ShootLaserServerRpc()
+    {
+        // Realizar raycast desde el servidor para validación
+        RaycastHit hit;
+        Vector3 rayDirection = firePoint.forward;
+        bool hasHit = Physics.Raycast(firePoint.position, rayDirection, out hit, laserRange, hitLayers);
+
+        // Procesar el impacto (daño, etc.)
         if (hasHit)
         {
             ProcessHit(hit);
         }
 
-        // Mostrar efectos en todos los clientes
+        // Replicar efectos a otros clientes
         ShowLaserEffectsClientRpc(firePoint.position, hasHit ? hit.point : firePoint.position + rayDirection * laserRange, hasHit);
     }
 
     [ClientRpc]
     private void ShowLaserEffectsClientRpc(Vector3 startPos, Vector3 endPos, bool hasHit)
     {
-        // Mostrar efecto de láser
+        // No mostrar efectos en el cliente que ya los mostró localmente
+        if (IsOwner) return;
+
+        // Mostrar efectos en otros clientes
         StartCoroutine(ShowLaserBriefly(startPos, endPos));
 
-        // Efecto de muzzle flash
         if (muzzleFlash != null)
         {
-            
             muzzleFlash.Play();
         }
-
-        // Sonido de disparo
-        /*if (laserSound != null && audioSource != null)
-        {
-            audioSource.PlayOneShot(laserSound);
-        }*/
-
-        // Efecto de impacto si hubo hit
-        /*if (hasHit && hitEffect != null)
-        {
-            //Instantiate(hitEffect, endPos, Quaternion.LookRotation(hit.point - firePoint.position));
-            
-            // Sonido de impacto
-            if (hitSound != null && audioSource != null)
-            {
-                audioSource.PlayOneShot(hitSound);
-            }
-        }*/
     }
 
     private IEnumerator ShowLaserBriefly(Vector3 startPos, Vector3 endPos)
@@ -171,28 +162,23 @@ public class ShootingSystemOnline : NetworkBehaviour
             laserLine.SetPosition(0, startPos);
             laserLine.SetPosition(1, endPos);
             laserLine.enabled = true;
-            
+
+           // Debug.Log($"Mostrando láser desde {startPos} hasta {endPos}");
+
             yield return new WaitForSeconds(laserDuration);
-            
+
             laserLine.enabled = false;
+        }
+        else
+        {
+           // Debug.LogWarning("LineRenderer no asignado en ShootingSystemOnline");
         }
     }
 
     private void ProcessHit(RaycastHit hit)
     {
         // Aquí puedes agregar lógica de daño
-        Debug.Log($"Láser impactó: {hit.collider.name}");
-
-        // Ejemplo: aplicar daño a objetos con salud
-        /* 
-        HealthSystem health = hit.collider.GetComponent<HealthSystem>();
-        if (health != null)
-        {
-            health.TakeDamage(damage);
-        }
-        */
-
-       
+       // Debug.Log($"Láser impactó: {hit.collider.name}");
 
         // Si es otro avión
         if (hit.collider.CompareTag("Player"))
