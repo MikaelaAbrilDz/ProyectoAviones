@@ -63,14 +63,14 @@ public class ShootingSystemLocal : MonoBehaviour
         //if (!IsOwner) return;
         
         // Detectar input de disparo
-        if (Input.GetMouseButtonDown(0))
+        /*if (Input.GetMouseButtonDown(0))
         {
             StartFiring();
         }
         else if (Input.GetMouseButtonUp(0))
         {
             StopFiring();
-        }
+        }*/
     }
 
     public void StartFiring()
@@ -108,9 +108,9 @@ public class ShootingSystemLocal : MonoBehaviour
     {
         // Solo el cliente que es dueño puede disparar
         //if (IsOwner)
-        {
+        
             ShootLaserServerRpc();
-        }
+        
     }
 
     [ServerRpc]

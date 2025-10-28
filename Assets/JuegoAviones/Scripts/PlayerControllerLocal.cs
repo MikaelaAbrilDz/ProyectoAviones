@@ -16,22 +16,30 @@ public class PlayerControllerLocal : MonoBehaviour
 
     public GameObject explosionEffect;
 
+    //Llamada la scrip de ShootingSystemOnline
+    ShootingSystemLocal shootingSystem;
+
     Vector2 rotation;
     float inclination = 0;
     float speed = 10f;
     int maxInclination = 50;
     float inclinationSpeed = 50f;
     bool isDead = false;
+    bool isFiring = false; // Estado de disparo
 
     private void Start()
     {
-        // Si no se asignan puntos de origen, usar la posición del avión --> (ESTO ES LO QUE HACE)
+        
+        // OBTENER LA REFERENCIA AL SHOOTING SYSTEM
+        shootingSystem = GetComponent<ShootingSystemLocal>();
+        
+        // Si no se asignan puntos de origen, usar la posiciï¿½n del aviï¿½n --> (ESTO ES LO QUE HACE)
         /*if (raycastOrigins == null || raycastOrigins.Length == 0)
         {
             raycastOrigins = new Transform[] { transform };
         }*/
 
-        // Generar cámara
+        // Generar cï¿½mara
     }
     void Update()
     {
@@ -62,7 +70,7 @@ public class PlayerControllerLocal : MonoBehaviour
         transform.eulerAngles = new Vector3(transform.eulerAngles.x + rotation.y * Time.deltaTime * 50, transform.eulerAngles.y + rotation.x * Time.deltaTime * 50,
             inclination);
 
-        //CÁLCULOS PARA INCLINACIÓN SMOOTH
+        //Cï¿½LCULOS PARA INCLINACIï¿½N SMOOTH
         inclination = Mathf.MoveTowards(inclination, -rotation.x * maxInclination, Time.deltaTime * inclinationSpeed);
     }
     private void OnMove(InputValue movementValue)
@@ -84,6 +92,34 @@ public class PlayerControllerLocal : MonoBehaviour
 
         }
     }
+    //Disparo normal
+    private void OnAttack_0(InputValue attack)
+    {
+        if (attack.isPressed && !isFiring)
+        {
+            // Iniciar disparo solo si no estÃ¡bamos disparando ya
+            isFiring = true;
+            shootingSystem.StartFiring();
+            Debug.Log("Pium pium...");
+            speed = 3f;
+        }
+        else if (!attack.isPressed && isFiring)
+        {
+            // Detener disparo solo si estÃ¡bamos disparando
+            isFiring = false;
+            shootingSystem.StopFiring();
+            speed = 10f;
+            Debug.Log("No Pium pium...");
+        }
+    }
+    //Disparo misil (aun no programado)
+    /*private void OnAttack_1(InputValue attack1)
+    {
+        if (attack1.isPressed)
+        {
+            Debug.Log("Misilazo");
+        }
+    }*/
 
     private void CheckForBuildings()
     {
@@ -97,7 +133,7 @@ public class PlayerControllerLocal : MonoBehaviour
             {
                 Debug.DrawRay(origin.position, origin.forward * raycastDistance, Color.red);
 
-                // Si golpea un edificio, destruir el avión
+                // Si golpea un edificio, destruir el aviï¿½n
                 DestroyAirplane();
                 return;
             }
@@ -106,8 +142,6 @@ public class PlayerControllerLocal : MonoBehaviour
                 Debug.DrawRay(origin.position, origin.forward * raycastDistance, Color.green);
             }
         }
-
-
     }
 
     private void DestroyAirplane()
@@ -115,7 +149,15 @@ public class PlayerControllerLocal : MonoBehaviour
         if (isDead) return;
 
         isDead = true;
-        //Efecto explosión al destruirse el avión
+        
+        // Detener el disparo si estaba activo
+        if (isFiring)
+        {
+            shootingSystem.StopFiring();
+            isFiring = false;
+        }
+        
+        //Efecto explosiï¿½n al destruirse el aviï¿½n
         Instantiate(explosionEffect, transform.position, transform.rotation);
 
         // Finds object by name and deactivates it
