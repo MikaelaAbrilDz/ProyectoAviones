@@ -59,18 +59,7 @@ public class ShootingSystemLocal : MonoBehaviour
 
     private void Update()
     {
-        // Solo permitir disparar si somos el dueño del objeto
-        //if (!IsOwner) return;
-        
-        // Detectar input de disparo
-        /*if (Input.GetMouseButtonDown(0))
-        {
-            StartFiring();
-        }
-        else if (Input.GetMouseButtonUp(0))
-        {
-            StopFiring();
-        }*/
+       
     }
 
     public void StartFiring()
@@ -93,75 +82,72 @@ public class ShootingSystemLocal : MonoBehaviour
         {
             laserLine.enabled = false;
         }
+        
+        // Detener el muzzle flash
+        if (muzzleFlash != null)
+        {
+            muzzleFlash.Stop();
+        }
     }
 
     private IEnumerator FiringCoroutine()
+{
+    while (isFiring)
     {
-        while (isFiring)
-        {
-            ShootLaser();
-            yield return new WaitForSeconds(fireDelay);
-        }
+        ShootLaser();
+        yield return new WaitForSeconds(fireDelay);
     }
+}
 
-    private void ShootLaser()
+private void ShootLaser()
+{
+    PlayMuzzleFlash();
+    
+    // Resto del código del láser...
+    RaycastHit hit;
+    Vector3 startPos = firePoint.position;
+    Vector3 endPos;
+    
+    bool hasHit = Physics.Raycast(startPos, firePoint.forward, out hit, laserRange, hitLayers);
+
+    if (hasHit)
     {
-        // Solo el cliente que es dueño puede disparar
-        //if (IsOwner)
+        endPos = hit.point;
+        ProcessHit(hit);
+    }
+    else
+    {
+        endPos = startPos + firePoint.forward * laserRange;
+    }
+    
+    StartCoroutine(ShowLaserBriefly(startPos, endPos));
+}
         
-            ShootLaserServerRpc();
-        
-    }
-
-    [ServerRpc]
-    private void ShootLaserServerRpc()
+        // Aquí puedes agregar sonido
+        // if (laserSound != null && audioSource != null)
+        // {
+        //     audioSource.PlayOneShot(laserSound);
+        // }
+private void PlayMuzzleFlash()
+{
+    if (muzzleFlash == null)
     {
-        // Realizar raycast desde el servidor
-        RaycastHit hit;
-        Vector3 rayDirection = firePoint.forward;
-        bool hasHit = Physics.Raycast(firePoint.position, rayDirection, out hit, laserRange, hitLayers);
-
-        // Procesar el impacto
-        if (hasHit)
-        {
-            ProcessHit(hit);
-        }
-
-        // Mostrar efectos en todos los clientes
-        ShowLaserEffectsClientRpc(firePoint.position, hasHit ? hit.point : firePoint.position + rayDirection * laserRange, hasHit);
+        Debug.LogError("MuzzleFlash no asignado!");
+        return;
     }
 
-    [ClientRpc]
-    private void ShowLaserEffectsClientRpc(Vector3 startPos, Vector3 endPos, bool hasHit)
-    {
-        // Mostrar efecto de láser
-        StartCoroutine(ShowLaserBriefly(startPos, endPos));
+    // Asegurar que el GameObject esté activo
+    if (!muzzleFlash.gameObject.activeInHierarchy)
+        muzzleFlash.gameObject.SetActive(true);
 
-        // Efecto de muzzle flash
-        if (muzzleFlash != null)
-        {
-            
-            muzzleFlash.Play();
-        }
-
-        // Sonido de disparo
-        /*if (laserSound != null && audioSource != null)
-        {
-            audioSource.PlayOneShot(laserSound);
-        }*/
-
-        // Efecto de impacto si hubo hit
-        /*if (hasHit && hitEffect != null)
-        {
-            //Instantiate(hitEffect, endPos, Quaternion.LookRotation(hit.point - firePoint.position));
-            
-            // Sonido de impacto
-            if (hitSound != null && audioSource != null)
-            {
-                audioSource.PlayOneShot(hitSound);
-            }
-        }*/
-    }
+    // SOLUCIÓN: Usar Simulate y Play juntos
+    muzzleFlash.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+    muzzleFlash.Simulate(0, true, true); // Resetear al inicio
+    muzzleFlash.Play(true); // Forzar play incluyendo hijos
+    
+    Debug.Log($"MuzzleFlash playing: {muzzleFlash.isPlaying}");
+    Debug.Log($"Particle count: {muzzleFlash.particleCount}");
+}
 
     private IEnumerator ShowLaserBriefly(Vector3 startPos, Vector3 endPos)
     {
@@ -191,8 +177,6 @@ public class ShootingSystemLocal : MonoBehaviour
             health.TakeDamage(damage);
         }
         */
-
-       
 
         // Si es otro avión
         if (hit.collider.CompareTag("Player"))
