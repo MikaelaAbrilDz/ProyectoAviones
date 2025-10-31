@@ -144,7 +144,7 @@ public class PlayerControllerLocal : MonoBehaviour
         }
     }
 
-    private void DestroyAirplane()
+    public void DestroyAirplane()
     {
         if (isDead) return;
 

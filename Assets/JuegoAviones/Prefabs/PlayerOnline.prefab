@@ -1902,7 +1902,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   firePoint: {fileID: 1394426206559237690}
   fireRate: 10
-  laserRange: 100
+  laserRange: 320
   laserDuration: 0.1
   damage: 10
   laserLine: {fileID: 4222939324739490593}

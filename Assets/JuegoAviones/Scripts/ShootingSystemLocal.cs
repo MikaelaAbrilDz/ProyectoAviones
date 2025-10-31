@@ -183,6 +183,7 @@ private void PlayMuzzleFlash()
         {
             // Lógica para dañar otros jugadores
             Debug.Log("¡Avión enemigo impactado!");
+            hit.collider.gameObject.GetComponent<PlayerControllerLocal>().DestroyAirplane();
         }
     }
 
