@@ -5035,7 +5035,8 @@ PrefabInstance:
       propertyPath: m_Name
       value: PlayerLocalPruebas
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 5535382763807495911, guid: 45808d07b77fa2f4883bd49a9b96c372, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 7392546238368405080, guid: 45808d07b77fa2f4883bd49a9b96c372, type: 3}
@@ -5066,7 +5067,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 563877119}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c38ed461cb4b1c847a5912648f41619c, type: 3}
   m_Name: 

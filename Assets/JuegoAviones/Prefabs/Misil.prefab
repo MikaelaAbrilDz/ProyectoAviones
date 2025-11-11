@@ -13,9 +13,10 @@ GameObject:
   - component: {fileID: 4966745668118719254}
   - component: {fileID: 6416059922202136655}
   - component: {fileID: 5154139496188175911}
+  - component: {fileID: -7615905762608198297}
   m_Layer: 7
   m_Name: Misil
-  m_TagString: Misil
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -141,3 +142,19 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &-7615905762608198297
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9003380054984881706}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c38ed461cb4b1c847a5912648f41619c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MisilController
+  buildingLayerName: Buildings
+  explosionForce: 10
+  explosionRadius: 5
+  explosionEffect: {fileID: 0}
