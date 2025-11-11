@@ -112,14 +112,16 @@ public class PlayerControllerLocal : MonoBehaviour
             Debug.Log("No Pium pium...");
         }
     }
-    //Disparo misil (aun no programado)
-    /*private void OnAttack_1(InputValue attack1)
+
+    //Disparo misil 
+    private void OnAttack_1(InputValue attack1)
     {
         if (attack1.isPressed)
         {
+            shootingSystem.Misil();
             Debug.Log("Misilazo");
         }
-    }*/
+    }
 
     private void CheckForBuildings()
     {
