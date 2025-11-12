@@ -20,8 +20,7 @@ public class ShootingSystemLocal : MonoBehaviour
     [SerializeField] private GameObject misil;
     [SerializeField] private Transform misilPoint;
     [SerializeField] private float misilSpeed = 20f; // Velocidad del misil
-    [SerializeField] private int MaximoMisiles = 3; //3
-    private int contadorMisiles = 3;
+    [SerializeField] private int misilAmmount = 3; //3
 
     //[Header("Audio")]
     //[SerializeField] private AudioClip laserSound;
@@ -192,10 +191,10 @@ public class ShootingSystemLocal : MonoBehaviour
     public void Misil()
     {
         // Lógica para disparar un misil
-        if (contadorMisiles <= MaximoMisiles && contadorMisiles > 0)
+        if (misilAmmount > 0)
         {
             // Instanciar el misil
-            GameObject misilInstanciado = Instantiate(misil, misilPoint.position, misilPoint.rotation);
+            GameObject misilInstanciado = Instantiate(misil, misilPoint.position, transform.rotation);
 
             // Obtener el Rigidbody del misil y aplicar velocidad
             Rigidbody misilRb = misilInstanciado.GetComponent<Rigidbody>();
@@ -219,8 +218,8 @@ public class ShootingSystemLocal : MonoBehaviour
                 misilController = misilInstanciado.AddComponent<MisilController>();
             }
 
-            contadorMisiles--;
-            Debug.Log($"Misil disparado. Misiles restantes: {contadorMisiles}");
+            misilAmmount--;
+            Debug.Log($"Misil disparado. Misiles restantes: {misilAmmount}");
         }
         else
         {

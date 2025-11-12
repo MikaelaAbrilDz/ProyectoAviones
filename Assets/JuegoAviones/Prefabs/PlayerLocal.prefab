@@ -21749,7 +21749,6 @@ GameObject:
   - component: {fileID: 9145645886458654313}
   - component: {fileID: 2662130974105688455}
   - component: {fileID: 1821272354253757433}
-  - component: {fileID: 5535382763807495911}
   m_Layer: 0
   m_Name: PlayerLocal
   m_TagString: Player
@@ -21912,9 +21911,9 @@ MonoBehaviour:
   laserLine: {fileID: 5495022830296221476}
   muzzleFlash: {fileID: 4469883507263950512, guid: af6c1e3f046eecd4d81330aeb285600f, type: 3}
   misil: {fileID: 9003380054984881706, guid: 8ae740c93d33cea499f74d16fa6dbf10, type: 3}
-  misilPoint: {fileID: 3642153596506936987, guid: 8ae740c93d33cea499f74d16fa6dbf10, type: 3}
+  misilPoint: {fileID: 656357901755721600}
   misilSpeed: 50
-  MaximoMisiles: 3
+  misilAmmount: 3
   hitLayers:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -21939,22 +21938,6 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 2.27
   m_Center: {x: 0, y: 0, z: -0.66}
---- !u!114 &5535382763807495911
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8158826170481729158}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c38ed461cb4b1c847a5912648f41619c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MisilController
-  buildingLayerName: Buildings
-  explosionForce: 10
-  explosionRadius: 5
-  explosionEffect: {fileID: 4469883507263950526, guid: af6c1e3f046eecd4d81330aeb285600f, type: 3}
 --- !u!1 &8831892675828346128
 GameObject:
   m_ObjectHideFlags: 0
