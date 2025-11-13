@@ -138,7 +138,7 @@ public class PlayerControllerOnline : NetworkBehaviour
 
 
     }
-    private void DestroyAirplane()
+    public void DestroyAirplane()
     {
         Debug.Log("YETS destruido :(");
 

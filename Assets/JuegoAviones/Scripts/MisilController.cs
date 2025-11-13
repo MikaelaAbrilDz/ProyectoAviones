@@ -7,9 +7,11 @@ public class MisilController : MonoBehaviour
     [SerializeField] private float explosionRadius = 5f;
     [SerializeField] private GameObject explosionEffect;
 
+    private PlayerControllerLocal playerController;
+
     private void Start()
     {
-
+        playerController = GetComponent<PlayerControllerLocal>();
 
         // Destruir el misil después de un tiempo por si no colisiona
         Destroy(gameObject, 10f);
@@ -47,14 +49,36 @@ public class MisilController : MonoBehaviour
         }
         
         
-        else if (collision.gameObject.CompareTag("Player"))
-        {
-            
-            Debug.Log("Misil impactó con jugador");
-
-            // Destruir el misil
-            Destroy(gameObject);
-        }
+       
         
+    }
+
+    private void ProcessHit(RaycastHit hit)
+    {
+          // Verificar si el objeto impactado tiene PlayerControllerLocal
+        PlayerControllerLocal targetPlayer = hit.collider.GetComponent<PlayerControllerLocal>();
+        if (targetPlayer == null)
+        {
+            // Si no lo encontramos directamente, buscar en el parent (por si es una parte del avión)
+            targetPlayer = hit.collider.GetComponentInParent<PlayerControllerLocal>();
+        }
+
+        if (targetPlayer != null && targetPlayer != this.playerController) // Asegurar que no sea el mismo jugador
+        {
+            if (hit.collider.CompareTag("Alas"))
+            {
+                Debug.Log("Muerto");
+                targetPlayer.DestroyAirplane();
+            }
+            else if (hit.collider.CompareTag("Cabina"))
+            {
+                Debug.Log("Muerto");
+                targetPlayer.DestroyAirplane();
+            }
+        }
+        else
+        {
+            Debug.Log($"Objeto impactado no es un jugador enemigo o es el mismo jugador");
+        }
     }
 }
