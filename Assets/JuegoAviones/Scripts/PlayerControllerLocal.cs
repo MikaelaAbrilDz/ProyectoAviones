@@ -13,6 +13,8 @@ public class PlayerControllerLocal : MonoBehaviour
     [SerializeField] Transform camFollowed;
     [SerializeField] GameObject cameraPrefab;
     GameObject cameraObj;
+    Transform pointer;
+    Transform otherPlayer;
 
     public GameObject explosionEffect;
 
@@ -27,7 +29,7 @@ public class PlayerControllerLocal : MonoBehaviour
     float inclination = 0;
     float speed = 10f;
     int maxInclination = 50;
-    float inclinationSpeed = 50f;
+    float inclinationSpeed = 100f;
     bool isDead = false;
     bool isFiring = false;
 
@@ -47,6 +49,20 @@ public class PlayerControllerLocal : MonoBehaviour
             raycastOrigins = new Transform[] { transform };
             Debug.LogWarning("No hay raycastOrigins asignados, usando transform por defecto");
         }
+
+        GetOtherPlayer();
+    }
+    public void GetOtherPlayer()
+    {
+        if (otherPlayer == null)
+        {
+            foreach (var players in FindObjectsByType<PlayerControllerLocal>(FindObjectsSortMode.None))
+            {
+                if (players != this) otherPlayer = players.transform;
+            }
+            otherPlayer.GetComponent<PlayerControllerLocal>().GetOtherPlayer();
+        }
+        
     }
 
     void Update()
@@ -55,6 +71,8 @@ public class PlayerControllerLocal : MonoBehaviour
         {
             Movement();
             CheckForBuildings();
+
+            pointer.rotation = Quaternion.LookRotation(otherPlayer.transform.position - transform.position);
         }
     }
 
@@ -70,6 +88,8 @@ public class PlayerControllerLocal : MonoBehaviour
         }
         GetComponent<PlayerInput>().camera = cameraObj.GetComponentInChildren<Camera>();
         cameraObj.GetComponentInChildren<CinemachineBrain>().ChannelMask = channel;
+
+        pointer = cameraObj.GetComponent<PointerManager>().pointerTrnsfm;
     }
 
     private void Movement()

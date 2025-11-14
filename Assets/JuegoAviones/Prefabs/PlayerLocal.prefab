@@ -15024,7 +15024,7 @@ GameObject:
   - component: {fileID: 5844525237557063712}
   - component: {fileID: 5691315964604389626}
   - component: {fileID: 5202047423896776260}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Capsule
   m_TagString: Cabina
   m_Icon: {fileID: 0}
@@ -16510,7 +16510,7 @@ GameObject:
   m_Component:
   - component: {fileID: 860023302697301467}
   - component: {fileID: 3347671403893443156}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: ala2
   m_TagString: Alas
   m_Icon: {fileID: 0}
@@ -21946,7 +21946,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4853518490310699737}
   - component: {fileID: 7266412024076683761}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Ala
   m_TagString: Alas
   m_Icon: {fileID: 0}

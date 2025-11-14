@@ -137,6 +137,9 @@ MonoBehaviour:
   buildingLayer:
     serializedVersion: 2
     m_Bits: 64
+  playerLayer:
+    serializedVersion: 2
+    m_Bits: 256
   explosionForce: 10
   explosionRadius: 5
   explosionEffect: {fileID: 0}
