@@ -12,6 +12,7 @@ public class PlayerControllerLocal : MonoBehaviour
     [SerializeField] Transform[] raycastOrigins;
     [SerializeField] Transform camFollowed;
     [SerializeField] GameObject cameraPrefab;
+    [SerializeField] GameObject cross;
     GameObject cameraObj;
     Transform pointer;
     Transform otherPlayer;
@@ -76,7 +77,7 @@ public class PlayerControllerLocal : MonoBehaviour
         }
     }
 
-    public void AtJoining(OutputChannels channel)
+    public void AtJoining(OutputChannels channel, LayerMask layerMain, LayerMask layerUI, int playerID)
     {
         cameraObj = Instantiate(cameraPrefab);
         foreach (var camera in cameraObj.GetComponentsInChildren<CinemachineCamera>())
@@ -86,10 +87,38 @@ public class PlayerControllerLocal : MonoBehaviour
             if (camera.name == "PlayerCamSpeed") speedCam = camera;
             camera.OutputChannel = channel;
         }
-        GetComponent<PlayerInput>().camera = cameraObj.GetComponentInChildren<Camera>();
+        Camera mainCam = cameraObj.GetComponentInChildren<Camera>();
+        GetComponent<PlayerInput>().camera = mainCam;
+        mainCam.cullingMask = layerMain;
+        foreach (var cam in mainCam.GetComponentsInChildren<Camera>())
+        {
+            if(cam.name == "PointerCam") cam.cullingMask = layerUI;
+        } 
         cameraObj.GetComponentInChildren<CinemachineBrain>().ChannelMask = channel;
-
         pointer = cameraObj.GetComponent<PointerManager>().pointerTrnsfm;
+        if (playerID == 0)
+        {
+            foreach (var cross in cross.GetComponentsInChildren<Transform>())
+            {
+                cross.gameObject.layer = LayerMask.NameToLayer("Cross_P0");
+            }
+            foreach (var pointer in pointer.GetComponentsInChildren<Transform>())
+            {
+                pointer.gameObject.layer = LayerMask.NameToLayer("3DUI_P0");
+            }
+        }
+        else
+        {
+            foreach (var cross in cross.GetComponentsInChildren<Transform>())
+            {
+                cross.gameObject.layer = LayerMask.NameToLayer("Cross_P1");
+            }
+            foreach (var pointer in pointer.GetComponentsInChildren<Transform>())
+            {
+                pointer.gameObject.layer = LayerMask.NameToLayer("3DUI_P1");
+            }
+        }
+
     }
 
     private void Movement()

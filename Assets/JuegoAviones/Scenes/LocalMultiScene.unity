@@ -1486,6 +1486,18 @@ MonoBehaviour:
   spawnPoints:
   - {fileID: 896489320}
   - {fileID: 1820709864}
+  mainCamMask_p0:
+    serializedVersion: 2
+    m_Bits: 2551
+  mainCamMask_p1:
+    serializedVersion: 2
+    m_Bits: 4599
+  uiCamMask_p0:
+    serializedVersion: 2
+    m_Bits: 512
+  uiCamMask_p1:
+    serializedVersion: 2
+    m_Bits: 1024
 --- !u!81 &1114549115
 AudioListener:
   m_ObjectHideFlags: 0

@@ -11,6 +11,10 @@ public class LocalGameManager : MonoBehaviour
     [SerializeField] TextMeshProUGUI text;
     [SerializeField] GameObject canvas;
     [SerializeField] Transform[] spawnPoints;
+    [SerializeField] LayerMask mainCamMask_p0;
+    [SerializeField] LayerMask mainCamMask_p1;
+    [SerializeField] LayerMask uiCamMask_p0;
+    [SerializeField] LayerMask uiCamMask_p1;
 
     int _joined
     {
@@ -37,7 +41,7 @@ public class LocalGameManager : MonoBehaviour
     {
         if (_joined == 1)
         {
-            input.GetComponent<PlayerControllerLocal>().AtJoining(Unity.Cinemachine.OutputChannels.Channel01);
+            input.GetComponent<PlayerControllerLocal>().AtJoining(Unity.Cinemachine.OutputChannels.Channel01, mainCamMask_p0, uiCamMask_p0, 0);
             input.GetComponent<Transform>().position = spawnPoints[0].position;
             input.GetComponent<Transform>().rotation = spawnPoints[0].rotation;
             playerIcons[0].color = Color.green;
@@ -45,10 +49,10 @@ public class LocalGameManager : MonoBehaviour
         }
         else if (_joined == 2)
         {
-            input.GetComponent<PlayerControllerLocal>().AtJoining(Unity.Cinemachine.OutputChannels.Channel02);
-            playerIcons[1].color = Color.green;
+            input.GetComponent<PlayerControllerLocal>().AtJoining(Unity.Cinemachine.OutputChannels.Channel02, mainCamMask_p1, uiCamMask_p1, 1);
             input.GetComponent<Transform>().position = spawnPoints[1].position;
             input.GetComponent<Transform>().rotation = spawnPoints[1].rotation;
+            playerIcons[1].color = Color.green;
             _joined = 3;
         }
     }
