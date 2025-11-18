@@ -21,7 +21,23 @@ public class PlayerControllerLocal : MonoBehaviour
 
     [Header("Vidas")]
     [SerializeField] private int vidas = 3;
-    public int Vidas => vidas; // Propiedad pública para leer las vidas
+    public int Vidas => vidas;
+
+    [Header("Sistema de Partículas del Motor")]
+    [SerializeField] private ParticleSystem engineParticleSystem;
+    [SerializeField] private Transform enginePosition;
+
+    [Header("Configuración Partículas - Normal")]
+    public float normalEmissionRate = 15f;
+    public float normalStartSpeed = 8f;
+    public float normalStartSize = 0.3f;
+    public float normalStartLifetime = 0.3f; // REDUCIDO
+
+    [Header("Configuración Partículas - Turbo")]
+    public float turboEmissionRate = 30f;
+    public float turboStartSpeed = 20f;
+    public float turboStartSize = 0.6f;
+    public float turboStartLifetime = 0.4f; // REDUCIDO
 
     // Referencia al shooting system
     ShootingSystemLocal shootingSystem;
@@ -33,26 +49,61 @@ public class PlayerControllerLocal : MonoBehaviour
     float inclinationSpeed = 100f;
     bool isDead = false;
     bool isFiring = false;
+    bool isTurboActive = false;
+
+    private ParticleSystem engineParticleInstance;
 
     private void Start()
     {
-        // OBTENER LA REFERENCIA AL SHOOTING SYSTEM
         shootingSystem = GetComponent<ShootingSystemLocal>();
-        
-        if (shootingSystem == null)
-        {
-            Debug.LogError("No se encontró ShootingSystemLocal en el objeto");
-        }
 
-        // Si no hay raycastOrigins asignados, usar el transform actual
         if (raycastOrigins == null || raycastOrigins.Length == 0)
         {
             raycastOrigins = new Transform[] { transform };
-            Debug.LogWarning("No hay raycastOrigins asignados, usando transform por defecto");
         }
 
+        InitializeEngineParticles();
         GetOtherPlayer();
     }
+
+    private void InitializeEngineParticles()
+    {
+        if (enginePosition == null || engineParticleSystem == null) return;
+
+        engineParticleInstance = Instantiate(engineParticleSystem, enginePosition.position, enginePosition.rotation);
+        engineParticleInstance.transform.SetParent(enginePosition);
+        engineParticleInstance.transform.localPosition = Vector3.zero;
+        engineParticleInstance.transform.localRotation = Quaternion.identity;
+
+        ConfigureEngineParticles();
+        engineParticleInstance.Play();
+    }
+
+    private void ConfigureEngineParticles()
+    {
+        if (engineParticleInstance == null) return;
+
+        var main = engineParticleInstance.main;
+        var emission = engineParticleInstance.emission;
+        var shape = engineParticleInstance.shape;
+
+        main.loop = true;
+        main.startLifetime = normalStartLifetime; // USANDO VARIABLE PÚBLICA
+        main.startSpeed = normalStartSpeed;
+        main.startSize = normalStartSize;
+        main.startColor = new Color(0.3f, 0.6f, 1f, 0.8f);
+        main.simulationSpace = ParticleSystemSimulationSpace.Local;
+        main.maxParticles = 30; // REDUCIDO
+
+        emission.rateOverTime = normalEmissionRate;
+
+        shape.shapeType = ParticleSystemShapeType.Cone;
+        shape.angle = 8f;
+        shape.radius = 0.03f;
+
+        engineParticleInstance.transform.localRotation = Quaternion.Euler(0, 180f, 0);
+    }
+
     public void GetOtherPlayer()
     {
         if (otherPlayer == null)
@@ -63,17 +114,17 @@ public class PlayerControllerLocal : MonoBehaviour
             }
             otherPlayer.GetComponent<PlayerControllerLocal>().GetOtherPlayer();
         }
-        
     }
 
     void Update()
     {
-        if (!isDead) 
+        if (!isDead)
         {
             Movement();
             CheckForBuildings();
 
-            pointer.rotation = Quaternion.LookRotation(otherPlayer.transform.position - transform.position);
+            if (pointer != null && otherPlayer != null)
+                pointer.rotation = Quaternion.LookRotation(otherPlayer.transform.position - transform.position);
         }
     }
 
@@ -92,8 +143,8 @@ public class PlayerControllerLocal : MonoBehaviour
         mainCam.cullingMask = layerMain;
         foreach (var cam in mainCam.GetComponentsInChildren<Camera>())
         {
-            if(cam.name == "PointerCam") cam.cullingMask = layerUI;
-        } 
+            if (cam.name == "PointerCam") cam.cullingMask = layerUI;
+        }
         cameraObj.GetComponentInChildren<CinemachineBrain>().ChannelMask = channel;
         pointer = cameraObj.GetComponent<PointerManager>().pointerTrnsfm;
         if (playerID == 0)
@@ -118,14 +169,13 @@ public class PlayerControllerLocal : MonoBehaviour
                 pointer.gameObject.layer = LayerMask.NameToLayer("3DUI_P1");
             }
         }
-
     }
 
     private void Movement()
     {
         transform.position += transform.forward * Time.deltaTime * speed;
         transform.eulerAngles = new Vector3(
-            transform.eulerAngles.x + rotation.y * Time.deltaTime * 50, 
+            transform.eulerAngles.x + rotation.y * Time.deltaTime * 50,
             transform.eulerAngles.y + rotation.x * Time.deltaTime * 50,
             inclination
         );
@@ -140,15 +190,49 @@ public class PlayerControllerLocal : MonoBehaviour
 
     private void OnTurbo(InputValue turbo)
     {
-        if (turbo.isPressed)
+        if (turbo.isPressed && !isTurboActive)
         {
             speed = 25f;
+            isTurboActive = true;
             if (speedCam != null) speedCam.Priority = 1;
+            ApplyTurboParticleEffects();
         }
-        else
+        else if (!turbo.isPressed && isTurboActive)
         {
             speed = 10f;
+            isTurboActive = false;
             if (speedCam != null) speedCam.Priority = -1;
+            ApplyNormalParticleEffects();
+        }
+    }
+
+    private void ApplyTurboParticleEffects()
+    {
+        if (engineParticleInstance != null)
+        {
+            var main = engineParticleInstance.main;
+            var emission = engineParticleInstance.emission;
+
+            main.startSpeed = turboStartSpeed;
+            main.startSize = turboStartSize;
+            main.startLifetime = turboStartLifetime; // USANDO VARIABLE PÚBLICA
+            emission.rateOverTime = turboEmissionRate;
+            main.startColor = new Color(1f, 0.6f, 0.2f, 1f);
+        }
+    }
+
+    private void ApplyNormalParticleEffects()
+    {
+        if (engineParticleInstance != null)
+        {
+            var main = engineParticleInstance.main;
+            var emission = engineParticleInstance.emission;
+
+            main.startSpeed = normalStartSpeed;
+            main.startSize = normalStartSize;
+            main.startLifetime = normalStartLifetime; // USANDO VARIABLE PÚBLICA
+            emission.rateOverTime = normalEmissionRate;
+            main.startColor = new Color(0.3f, 0.6f, 1f, 0.8f);
         }
     }
 
@@ -159,7 +243,6 @@ public class PlayerControllerLocal : MonoBehaviour
             isFiring = true;
             if (shootingSystem != null)
                 shootingSystem.StartFiring();
-            Debug.Log("Pium pium...");
             speed = 3f;
         }
         else if (!attack.isPressed && isFiring)
@@ -168,7 +251,6 @@ public class PlayerControllerLocal : MonoBehaviour
             if (shootingSystem != null)
                 shootingSystem.StopFiring();
             speed = 10f;
-            Debug.Log("No Pium pium...");
         }
     }
 
@@ -178,7 +260,6 @@ public class PlayerControllerLocal : MonoBehaviour
         {
             if (shootingSystem != null)
                 shootingSystem.Misil();
-            Debug.Log("Misilazo");
         }
     }
 
@@ -187,7 +268,7 @@ public class PlayerControllerLocal : MonoBehaviour
         foreach (Transform origin in raycastOrigins)
         {
             if (origin == null) continue;
-            
+
             Ray ray = new Ray(origin.position, origin.forward);
             RaycastHit hit;
 
@@ -209,23 +290,27 @@ public class PlayerControllerLocal : MonoBehaviour
         if (isDead) return;
 
         isDead = true;
-        
+
+        if (engineParticleInstance != null)
+        {
+            engineParticleInstance.Stop();
+        }
+
         if (isFiring && shootingSystem != null)
         {
             shootingSystem.StopFiring();
             isFiring = false;
         }
-        
+
         if (explosionEffect != null)
             Instantiate(explosionEffect, transform.position, transform.rotation);
 
-        foreach(var child in GetComponentsInChildren<MeshRenderer>())
+        foreach (var child in GetComponentsInChildren<MeshRenderer>())
         {
             child.gameObject.SetActive(false);
         }
 
-        // Desactivar colliders para evitar más colisiones
-        foreach(var collider in GetComponentsInChildren<Collider>())
+        foreach (var collider in GetComponentsInChildren<Collider>())
         {
             collider.enabled = false;
         }
@@ -243,8 +328,6 @@ public class PlayerControllerLocal : MonoBehaviour
         if (isDead) return;
 
         vidas--;
-        Debug.Log($"Daño en ala. Vidas restantes: {vidas}");
-
         if (vidas <= 0)
         {
             DestroyAirplane();
@@ -256,8 +339,6 @@ public class PlayerControllerLocal : MonoBehaviour
         if (isDead) return;
 
         vidas -= 2;
-        Debug.Log($"Daño en cabina. Vidas restantes: {vidas}");
-
         if (vidas <= 0)
         {
             DestroyAirplane();
