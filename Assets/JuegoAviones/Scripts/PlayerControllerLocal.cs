@@ -39,6 +39,10 @@ public class PlayerControllerLocal : MonoBehaviour
     public float turboStartSize = 0.6f;
     public float turboStartLifetime = 0.4f; // REDUCIDO
 
+    [Header("Configuración Fast Turn")]
+    [SerializeField] private float fastTurnSpeedMultiplier = 0.3f;
+    [SerializeField] private float fastTurnRotationMultiplier = 3f;
+
     // Referencia al shooting system
     ShootingSystemLocal shootingSystem;
 
@@ -50,6 +54,7 @@ public class PlayerControllerLocal : MonoBehaviour
     bool isDead = false;
     bool isFiring = false;
     bool isTurboActive = false;
+    bool isFastTurnActive = false;
 
     private ParticleSystem engineParticleInstance;
 
@@ -173,10 +178,20 @@ public class PlayerControllerLocal : MonoBehaviour
 
     private void Movement()
     {
-        transform.position += transform.forward * Time.deltaTime * speed;
+        float currentSpeed = speed;
+        float rotationMultiplier = 50f;
+
+        // Aplicar modificadores de Fast Turn
+        if (isFastTurnActive)
+        {
+            currentSpeed *= fastTurnSpeedMultiplier;
+            rotationMultiplier *= fastTurnRotationMultiplier;
+        }
+
+        transform.position += transform.forward * Time.deltaTime * currentSpeed;
         transform.eulerAngles = new Vector3(
-            transform.eulerAngles.x + rotation.y * Time.deltaTime * 50,
-            transform.eulerAngles.y + rotation.x * Time.deltaTime * 50,
+            transform.eulerAngles.x + rotation.y * Time.deltaTime * rotationMultiplier,
+            transform.eulerAngles.y + rotation.x * Time.deltaTime * rotationMultiplier,
             inclination
         );
         inclination = Mathf.MoveTowards(inclination, -rotation.x * maxInclination, Time.deltaTime * inclinationSpeed);
@@ -188,9 +203,21 @@ public class PlayerControllerLocal : MonoBehaviour
         rotation.y = movementValue.Get<Vector2>().y;
     }
 
+    private void OnFastTurn(InputValue fastTurnValue)
+    {
+        if (fastTurnValue.isPressed && !isFastTurnActive && !isDead)
+        {
+            isFastTurnActive = true;
+        }
+        else if (!fastTurnValue.isPressed && isFastTurnActive)
+        {
+            isFastTurnActive = false;
+        }
+    }
+
     private void OnTurbo(InputValue turbo)
     {
-        if (turbo.isPressed && !isTurboActive)
+        if (turbo.isPressed && !isTurboActive && !isFastTurnActive)
         {
             speed = 25f;
             isTurboActive = true;

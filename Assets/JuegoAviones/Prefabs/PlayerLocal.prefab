@@ -5102,7 +5102,7 @@ Transform:
   m_GameObject: {fileID: 3733049619966835719}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -8.83}
+  m_LocalPosition: {x: 0, y: 0.6, z: -9.73}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -6485,6 +6485,37 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!1 &6199390475692567170
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3467202527464834579}
+  m_Layer: 0
+  m_Name: SmokePoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3467202527464834579
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6199390475692567170}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.74, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7392546238368405080}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &6700871418433382779
 GameObject:
   m_ObjectHideFlags: 0
@@ -12032,6 +12063,7 @@ Transform:
   - {fileID: 656357901755721600}
   - {fileID: 77790546781544034}
   - {fileID: 2721368220081039348}
+  - {fileID: 3467202527464834579}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &8972343705543778665
@@ -12063,6 +12095,12 @@ MonoBehaviour:
   vidas: 3
   engineParticleSystem: {fileID: 8891297334280618237, guid: c4ed38c72957f2241ad144a1614956d9, type: 3}
   enginePosition: {fileID: 2721368220081039348}
+  smokeParticlePrefab: {fileID: 8656522925564163052, guid: e509867be4f82f246a95eca1ee5a2d61, type: 3}
+  smokePosition: {fileID: 3467202527464834579}
+  smokeEmissionRates:
+  - 10
+  - 20
+  - 30
   normalEmissionRate: 10
   normalStartSpeed: 3
   normalStartSize: 0.2
@@ -12071,6 +12109,8 @@ MonoBehaviour:
   turboStartSpeed: 7
   turboStartSize: 0.4
   turboStartLifetime: 0.3
+  fastTurnSpeedMultiplier: 0.3
+  fastTurnRotationMultiplier: 3
 --- !u!114 &9145645886458654313
 MonoBehaviour:
   m_ObjectHideFlags: 0
