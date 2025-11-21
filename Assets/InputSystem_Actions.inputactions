@@ -232,7 +232,7 @@
                 {
                     "name": "",
                     "id": "afe4a84f-6b8b-416d-9cea-64654034212d",
-                    "path": "<DualShockGamepad>/buttonEast",
+                    "path": "<Gamepad>/buttonEast",
                     "interactions": "",
                     "processors": "",
                     "groups": ";Gamepad",
