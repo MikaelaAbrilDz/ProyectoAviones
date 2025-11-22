@@ -12095,12 +12095,6 @@ MonoBehaviour:
   vidas: 3
   engineParticleSystem: {fileID: 8891297334280618237, guid: c4ed38c72957f2241ad144a1614956d9, type: 3}
   enginePosition: {fileID: 2721368220081039348}
-  smokeParticlePrefab: {fileID: 8656522925564163052, guid: e509867be4f82f246a95eca1ee5a2d61, type: 3}
-  smokePosition: {fileID: 3467202527464834579}
-  smokeEmissionRates:
-  - 10
-  - 20
-  - 30
   normalEmissionRate: 10
   normalStartSpeed: 3
   normalStartSize: 0.2

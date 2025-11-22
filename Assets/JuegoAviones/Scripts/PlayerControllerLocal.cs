@@ -23,6 +23,10 @@ public class PlayerControllerLocal : MonoBehaviour
     [SerializeField] private int vidas = 3;
     public int Vidas => vidas;
 
+    [Header("Screen Shake - Disparo")]
+    [SerializeField] float screenShakeAmmount = 0.5f;
+    [SerializeField] float screenShakeFrequency = 6f;
+
     [Header("Sistema de Partículas del Motor")]
     [SerializeField] private ParticleSystem engineParticleSystem;
     [SerializeField] private Transform enginePosition;
@@ -271,6 +275,11 @@ public class PlayerControllerLocal : MonoBehaviour
             if (shootingSystem != null)
                 shootingSystem.StartFiring();
             speed = 3f;
+            foreach (CinemachineBasicMultiChannelPerlin shake in cameraObj.GetComponentsInChildren<CinemachineBasicMultiChannelPerlin>())
+            {
+                shake.AmplitudeGain = screenShakeAmmount;
+                shake.FrequencyGain = screenShakeFrequency;
+            }
         }
         else if (!attack.isPressed && isFiring)
         {
@@ -278,6 +287,11 @@ public class PlayerControllerLocal : MonoBehaviour
             if (shootingSystem != null)
                 shootingSystem.StopFiring();
             speed = 10f;
+            foreach (CinemachineBasicMultiChannelPerlin shake in cameraObj.GetComponentsInChildren<CinemachineBasicMultiChannelPerlin>())
+            {
+                shake.AmplitudeGain = 0;
+                shake.FrequencyGain = 0;
+            }
         }
     }
 
