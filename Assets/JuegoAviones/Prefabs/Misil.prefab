@@ -142,4 +142,5 @@ MonoBehaviour:
     m_Bits: 256
   explosionForce: 10
   explosionRadius: 5
-  explosionEffect: {fileID: 0}
+  explosionEffect: {fileID: 8194992990867289339, guid: 99bc28c0d45f51c4fbac01080b73edc7, type: 3}
+  misilSpeed: 50
