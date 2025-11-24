@@ -76,11 +76,7 @@ public class MisilController : MonoBehaviour
                     PlayerControllerOnline targetPlayer = playerCollider.GetComponentInParent<PlayerControllerOnline>();
                     if (targetPlayer != null)
                     {
-                        // En online, solo el servidor aplica el daño
-                        if (IsServer())
-                        {
-                            targetPlayer.DestroyAirplane();
-                        }
+                        targetPlayer.FullDamage();
                     }
                 }
                 else

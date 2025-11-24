@@ -7188,8 +7188,9 @@ MonoBehaviour:
   camFollowed: {fileID: 8011799909410342971}
   cameraPrefab: {fileID: 8695755974375431491, guid: fa329b09f1d6dd343b7d2cb6ec2a8b08, type: 3}
   cross: {fileID: 8831892675828346128}
-  explosionEffect: {fileID: 2433282508537954060, guid: 3ef3ae421f71c5c4e97fe12dc2fc6312, type: 3}
-  vidas: 3
+  explosionEffect: {fileID: 2433282508537954060, guid: 0ef8872efcc75064bbd917c5c04a02e3, type: 3}
+  networkVidas:
+    m_InternalValue: 3
   screenShakeAmmount: 0.5
   screenShakeFrequency: 6
   engineParticleSystem: {fileID: 8891297334280618237, guid: c4ed38c72957f2241ad144a1614956d9, type: 3}

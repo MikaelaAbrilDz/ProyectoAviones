@@ -5,11 +5,11 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/JuegoAviones/Scenes/LocalMultiScene.unity
     guid: 796fba6448db5d64aa31d45d060154ad
-  - enabled: 0
-    path: Assets/JuegoAviones/Scenes/MarcGuilleTEST.unity
+  - enabled: 1
+    path: Assets/JuegoAviones/Scenes/OnlineMultiScene.unity
     guid: 15a9f881b4421f248b9813878e4b74ff
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

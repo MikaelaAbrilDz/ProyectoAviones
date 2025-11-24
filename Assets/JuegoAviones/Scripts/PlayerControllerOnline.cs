@@ -21,8 +21,7 @@ public class PlayerControllerOnline : NetworkBehaviour
     public GameObject explosionEffect;
 
     [Header("Vidas")]
-    [SerializeField] private int vidas = 3;
-    public int Vidas => vidas;
+    public NetworkVariable<int> networkVidas = new NetworkVariable<int>(15);
 
     [Header("Screen Shake - Disparo")]
     [SerializeField] float screenShakeAmmount = 0.5f;
@@ -61,11 +60,9 @@ public class PlayerControllerOnline : NetworkBehaviour
     bool isFastTurnActive = false;
 
     private ParticleSystem engineParticleInstance;
-
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
-
         shootingSystem = GetComponent<ShootingSystemOnline>();
 
         if (raycastOrigins == null || raycastOrigins.Length == 0)
@@ -174,7 +171,7 @@ public class PlayerControllerOnline : NetworkBehaviour
 
         Movement();
         CheckForBuildings();
-
+        if (Input.GetKeyDown(KeyCode.V)) print(networkVidas.Value);
         if (pointer != null && otherPlayer != null)
             pointer.rotation = Quaternion.LookRotation(otherPlayer.transform.position - transform.position);
     }
@@ -389,8 +386,11 @@ public class PlayerControllerOnline : NetworkBehaviour
 
     public void DestroyAirplane()
     {
-        if (isDead) return;
-
+        DestroyPlaneServerRpc();
+    }
+    [ServerRpc]
+    void DestroyPlaneServerRpc()
+    {
         isDead = true;
 
         if (engineParticleInstance != null)
@@ -416,12 +416,6 @@ public class PlayerControllerOnline : NetworkBehaviour
         {
             collider.enabled = false;
         }
-
-        // En online, solo el servidor maneja el respawn
-        if (IsServer)
-        {
-            Invoke("RespawnPlayer", 3f);
-        }
     }
 
     private void RespawnPlayer()
@@ -430,7 +424,7 @@ public class PlayerControllerOnline : NetworkBehaviour
         {
             // Reactivar el avión
             isDead = false;
-            vidas = 3;
+            networkVidas.Value = 3;
 
             foreach (var child in GetComponentsInChildren<MeshRenderer>())
             {
@@ -459,25 +453,44 @@ public class PlayerControllerOnline : NetworkBehaviour
                 }
             }
         }
+        Invoke("RestartGame", 1f);
     }
 
-    public void DañoAla()
+    private void RestartGame()
+    {
+        SceneManager.LoadScene("OnlineMultiScene");
+    }
+    public void DamageWing()
     {
         if (isDead || !IsOwner) return;
 
-        vidas--;
-        if (vidas <= 0)
+        networkVidas.Value -= 3;
+        if (networkVidas.Value <= 0)
+        {
+            if (IsServer)
+            {
+                DestroyAirplane();
+
+            }
+        }
+    }
+
+    public void DamageCockpit()
+    {
+        if (isDead || !IsOwner) return;
+
+        networkVidas.Value -= 2;
+        if (networkVidas.Value <= 0)
         {
             DestroyAirplane();
         }
     }
-
-    public void DañoCabina()
+    public void FullDamage()
     {
         if (isDead || !IsOwner) return;
 
-        vidas -= 2;
-        if (vidas <= 0)
+        networkVidas.Value -= 2;
+        if (networkVidas.Value <= 0)
         {
             DestroyAirplane();
         }

@@ -62,7 +62,7 @@ public class ShootingSystemOnline : NetworkBehaviour
 
     public void StartFiring()
     {
-        if (!isFiring && playerController != null && playerController.Vidas > 0)
+        if (!isFiring && playerController != null && playerController.networkVidas.Value > 0)
         {
             isFiring = true;
             StartCoroutine(FiringCoroutine());
@@ -82,7 +82,7 @@ public class ShootingSystemOnline : NetworkBehaviour
 
     private IEnumerator FiringCoroutine()
     {
-        while (isFiring && playerController != null && playerController.Vidas > 0)
+        while (isFiring && playerController != null && playerController.networkVidas.Value > 0)
         {
             ShootLaser();
             yield return new WaitForSeconds(fireDelay);
@@ -230,18 +230,18 @@ public class ShootingSystemOnline : NetworkBehaviour
         {
             if (hit.collider.CompareTag("Alas"))
             {
-                targetPlayer.DañoAla();
+                targetPlayer.DamageWing();
             }
             else if (hit.collider.CompareTag("Cabina"))
             {
-                targetPlayer.DañoCabina();
+                targetPlayer.DamageCockpit();
             }
         }
     }
 
     public void Misil()
     {
-        if (misilAmmount > 0 && playerController != null && playerController.Vidas > 0)
+        if (misilAmmount > 0 && playerController != null && playerController.networkVidas.Value > 0)
         {
             if (misil == null || misilPoint == null)
             {
