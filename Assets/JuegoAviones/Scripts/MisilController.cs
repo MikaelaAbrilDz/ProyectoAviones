@@ -76,7 +76,7 @@ public class MisilController : MonoBehaviour
                     PlayerControllerOnline targetPlayer = playerCollider.GetComponentInParent<PlayerControllerOnline>();
                     if (targetPlayer != null)
                     {
-                        targetPlayer.FullDamage();
+                        targetPlayer.TakeDamage(999);
                     }
                 }
                 else

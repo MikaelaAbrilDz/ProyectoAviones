@@ -9,7 +9,6 @@ public class ShootingSystemOnline : NetworkBehaviour
     [SerializeField] private float fireRate = 10f;
     [SerializeField] private float laserRange = 100f;
     [SerializeField] private float laserDuration = 0.1f;
-    [SerializeField] private float damage = 10f;
 
     [Header("Efectos Visuales")]
     [SerializeField] private LineRenderer laserLine;
@@ -24,7 +23,7 @@ public class ShootingSystemOnline : NetworkBehaviour
     [SerializeField] private int misilAmmount = 3;
 
     [Header("Configuración de Layers")]
-    [SerializeField] private LayerMask hitLayers = ~0;
+    [SerializeField] private LayerMask hitLayers;
 
     private AudioSource audioSource;
     private bool isFiring = false;
@@ -62,7 +61,7 @@ public class ShootingSystemOnline : NetworkBehaviour
 
     public void StartFiring()
     {
-        if (!isFiring && playerController != null && playerController.networkVidas.Value > 0)
+        if (!isFiring && playerController != null && playerController.life > 0)
         {
             isFiring = true;
             StartCoroutine(FiringCoroutine());
@@ -82,7 +81,7 @@ public class ShootingSystemOnline : NetworkBehaviour
 
     private IEnumerator FiringCoroutine()
     {
-        while (isFiring && playerController != null && playerController.networkVidas.Value > 0)
+        while (isFiring && playerController != null && playerController.life > 0)
         {
             ShootLaser();
             yield return new WaitForSeconds(fireDelay);
@@ -93,42 +92,6 @@ public class ShootingSystemOnline : NetworkBehaviour
     {
         if (firePoint == null) return;
 
-        // Mostrar efectos localmente inmediatamente
-        ShowLaserEffectsLocally();
-
-        // Enviar al servidor para validación y replicación
-        if (IsOwner)
-        {
-            ShootLaserServerRpc();
-        }
-    }
-
-    private void ShowLaserEffectsLocally()
-    {
-        RaycastHit hit;
-        Vector3 startPos = firePoint.position;
-        Vector3 endPos;
-
-        bool hasHit = Physics.Raycast(startPos, firePoint.forward, out hit, laserRange, hitLayers);
-
-        if (hasHit)
-        {
-            endPos = hit.point;
-            ShowImpactParticle(hit.point, hit.normal);
-        }
-        else
-        {
-            endPos = startPos + firePoint.forward * laserRange;
-        }
-
-        ShowBulletTrail(startPos, endPos);
-        PlayMuzzleFlash();
-        StartCoroutine(ShowLaserBriefly(startPos, endPos));
-    }
-
-    [ServerRpc]
-    private void ShootLaserServerRpc()
-    {
         RaycastHit hit;
         Vector3 startPos = firePoint.position;
         Vector3 endPos;
@@ -139,30 +102,16 @@ public class ShootingSystemOnline : NetworkBehaviour
         {
             endPos = hit.point;
             ProcessHit(hit);
+            ShowImpactParticle(hit.point, hit.normal);
         }
         else
         {
             endPos = startPos + firePoint.forward * laserRange;
         }
 
-        // Replicar efectos a otros clientes
-        ShowLaserEffectsClientRpc(startPos, endPos, hasHit);
-    }
-
-    [ClientRpc]
-    private void ShowLaserEffectsClientRpc(Vector3 startPos, Vector3 endPos, bool hasHit)
-    {
-        // No mostrar efectos en el cliente que ya los mostró localmente
-        if (IsOwner) return;
-
         ShowBulletTrail(startPos, endPos);
         PlayMuzzleFlash();
         StartCoroutine(ShowLaserBriefly(startPos, endPos));
-
-        if (hasHit)
-        {
-            // Aquí podrías añadir la partícula de impacto si es necesario
-        }
     }
 
     private void PlayMuzzleFlash()
@@ -220,28 +169,24 @@ public class ShootingSystemOnline : NetworkBehaviour
 
     private void ProcessHit(RaycastHit hit)
     {
-        PlayerControllerOnline targetPlayer = hit.collider.GetComponent<PlayerControllerOnline>();
-        if (targetPlayer == null)
-        {
-            targetPlayer = hit.collider.GetComponentInParent<PlayerControllerOnline>();
-        }
+        PlayerControllerOnline targetPlayer = hit.collider.GetComponentInParent<PlayerControllerOnline>();
 
         if (targetPlayer != null && targetPlayer != this.playerController)
         {
             if (hit.collider.CompareTag("Alas"))
             {
-                targetPlayer.DamageWing();
+                targetPlayer.TakeDamage(2);
             }
-            else if (hit.collider.CompareTag("Cabina"))
+            if (hit.collider.CompareTag("Cabina"))
             {
-                targetPlayer.DamageCockpit();
+                targetPlayer.TakeDamage(4);
             }
         }
     }
 
     public void Misil()
     {
-        if (misilAmmount > 0 && playerController != null && playerController.networkVidas.Value > 0)
+        if (misilAmmount > 0 && playerController != null && playerController.life > 0)
         {
             if (misil == null || misilPoint == null)
             {
@@ -300,10 +245,9 @@ public class ShootingSystemOnline : NetworkBehaviour
         fireRate = newFireRate;
         fireDelay = 1f / fireRate;
         laserRange = newRange;
-        damage = newDamage;
     }
 
-    private void OnDestroy()
+    new void OnDestroy()
     {
         StopAllCoroutines();
     }

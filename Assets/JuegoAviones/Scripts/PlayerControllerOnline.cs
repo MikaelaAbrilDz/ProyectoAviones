@@ -4,6 +4,7 @@ using Unity.Netcode;
 using UnityEngine.InputSystem;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using System;
 
 public class PlayerControllerOnline : NetworkBehaviour
 {
@@ -21,7 +22,7 @@ public class PlayerControllerOnline : NetworkBehaviour
     public GameObject explosionEffect;
 
     [Header("Vidas")]
-    public NetworkVariable<int> networkVidas = new NetworkVariable<int>(15);
+    public NetworkVariable<int> networkLifes = new NetworkVariable<int>(15);
 
     [Header("Screen Shake - Disparo")]
     [SerializeField] float screenShakeAmmount = 0.5f;
@@ -60,6 +61,22 @@ public class PlayerControllerOnline : NetworkBehaviour
     bool isFastTurnActive = false;
 
     private ParticleSystem engineParticleInstance;
+
+    public int life
+    {
+        get
+        {
+            return networkLifes.Value;
+        }
+        set
+        {
+            if (networkLifes.Value > 0 && value <= 0)
+            {
+                DestroyAirplaneClientRpc();
+            }
+            networkLifes.Value = value;
+        }
+    }
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
@@ -169,9 +186,10 @@ public class PlayerControllerOnline : NetworkBehaviour
     {
         if (!IsOwner || isDead) return;
 
+
         Movement();
         CheckForBuildings();
-        if (Input.GetKeyDown(KeyCode.V)) print(networkVidas.Value);
+        if (Input.GetKeyDown(KeyCode.V)) print(life);
         if (pointer != null && otherPlayer != null)
             pointer.rotation = Quaternion.LookRotation(otherPlayer.transform.position - transform.position);
     }
@@ -374,7 +392,7 @@ public class PlayerControllerOnline : NetworkBehaviour
             if (Physics.Raycast(ray, out hit, raycastDistance, buildingLayerMask))
             {
                 Debug.DrawRay(origin.position, origin.forward * raycastDistance, Color.red);
-                DestroyAirplane();
+                TakeDamage(999);
                 return;
             }
             else
@@ -386,10 +404,39 @@ public class PlayerControllerOnline : NetworkBehaviour
 
     public void DestroyAirplane()
     {
-        DestroyPlaneServerRpc();
+        isDead = true;
+        if (IsServer)
+        {
+            DestroyAirplaneClientRpc();
+            return;
+        }
+
+        if (engineParticleInstance != null)
+        {
+            engineParticleInstance.Stop();
+        }
+
+        if (isFiring && shootingSystem != null)
+        {
+            shootingSystem.StopFiring();
+            isFiring = false;
+        }
+
+        if (explosionEffect != null)
+            Instantiate(explosionEffect, transform.position, transform.rotation);
+
+        foreach (var child in GetComponentsInChildren<MeshRenderer>())
+        {
+            child.gameObject.SetActive(false);
+        }
+
+        foreach (var collider in GetComponentsInChildren<Collider>())
+        {
+            collider.enabled = false;
+        }
     }
-    [ServerRpc]
-    void DestroyPlaneServerRpc()
+    [ClientRpc (RequireOwnership = false)]
+    void DestroyAirplaneClientRpc()
     {
         isDead = true;
 
@@ -424,7 +471,7 @@ public class PlayerControllerOnline : NetworkBehaviour
         {
             // Reactivar el avión
             isDead = false;
-            networkVidas.Value = 3;
+            life = 3;
 
             foreach (var child in GetComponentsInChildren<MeshRenderer>())
             {
@@ -460,40 +507,22 @@ public class PlayerControllerOnline : NetworkBehaviour
     {
         SceneManager.LoadScene("OnlineMultiScene");
     }
-    public void DamageWing()
+    public void TakeDamage(int damage)
     {
-        if (isDead || !IsOwner) return;
 
-        networkVidas.Value -= 3;
-        if (networkVidas.Value <= 0)
+        if (isDead) return;
+        if (!IsServer)
         {
-            if (IsServer)
-            {
-                DestroyAirplane();
-
-            }
-        }
+            TakeDamageServerRpc(damage);
+            return;
+        } 
+        
+        life -= damage;
     }
-
-    public void DamageCockpit()
+    [ServerRpc(RequireOwnership = false)]
+    void TakeDamageServerRpc(int damage)
     {
-        if (isDead || !IsOwner) return;
-
-        networkVidas.Value -= 2;
-        if (networkVidas.Value <= 0)
-        {
-            DestroyAirplane();
-        }
-    }
-    public void FullDamage()
-    {
-        if (isDead || !IsOwner) return;
-
-        networkVidas.Value -= 2;
-        if (networkVidas.Value <= 0)
-        {
-            DestroyAirplane();
-        }
+        life -= damage;
     }
 
     public override void OnDestroy()

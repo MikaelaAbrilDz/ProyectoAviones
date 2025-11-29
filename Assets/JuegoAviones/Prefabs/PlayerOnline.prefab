@@ -349,7 +349,7 @@ GameObject:
   - component: {fileID: 2210207602708001923}
   - component: {fileID: 900780760382132289}
   m_Layer: 8
-  m_Name: Ala
+  m_Name: Wing
   m_TagString: Alas
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -363,12 +363,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2536116888665382097}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.6167, y: -0.559, z: 0.00061033}
-  m_LocalScale: {x: 2.131524, y: 2.274236, z: 0.9780742}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.9156671, y: 0.25666553, z: -1.2779679}
+  m_LocalScale: {x: 7.1050797, y: 7.580785, z: 3.2602468}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 7659678924024461725}
+  m_Father: {fileID: 7392546238368405080}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!65 &900780760382132289
 BoxCollider:
@@ -422,40 +422,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 7392546238368405080}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &3972338587129083004
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 7659678924024461725}
-  m_Layer: 0
-  m_Name: "ColisionesDa\xF1o"
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &7659678924024461725
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3972338587129083004}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -1.14, y: 2.12, z: -1.28}
-  m_LocalScale: {x: 3.333333, y: 3.333333, z: 3.333333}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 2210207602708001923}
-  - {fileID: 5725347765436961666}
-  - {fileID: 858496653836780187}
-  m_Father: {fileID: 7392546238368405080}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &4946913736033247470
 GameObject:
   m_ObjectHideFlags: 0
@@ -465,11 +431,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5725347765436961666}
-  - component: {fileID: 3285692342535102155}
-  - component: {fileID: 2104010415591672884}
   - component: {fileID: 3752077932061802096}
   m_Layer: 8
-  m_Name: Capsule
+  m_Name: Cockpit
   m_TagString: Cabina
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -483,69 +447,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4946913736033247470}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.70710677, y: 0, z: 0, w: 0.70710677}
-  m_LocalPosition: {x: 0.302, y: -0.654, z: 0.839}
-  m_LocalScale: {x: 0.48867214, y: 0.55302805, z: 0.34319273}
+  m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
+  m_LocalPosition: {x: -0.13333637, y: -0.059998825, z: 1.5166663}
+  m_LocalScale: {x: 1.6289068, y: 1.8434262, z: 1.1439754}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 7659678924024461725}
+  m_Father: {fileID: 7392546238368405080}
   m_LocalEulerAnglesHint: {x: 90, y: 90, z: 90}
---- !u!33 &3285692342535102155
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4946913736033247470}
-  m_Mesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
---- !u!23 &2104010415591672884
-MeshRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4946913736033247470}
-  m_Enabled: 0
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!136 &3752077932061802096
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -7123,6 +7031,9 @@ Transform:
   m_LocalScale: {x: 0.3, y: 0.3, z: 0.3}
   m_ConstrainProportionsScale: 1
   m_Children:
+  - {fileID: 2210207602708001923}
+  - {fileID: 5725347765436961666}
+  - {fileID: 858496653836780187}
   - {fileID: 8011799909410342971}
   - {fileID: 7478975307894697865}
   - {fileID: 2930135228807017653}
@@ -7132,7 +7043,6 @@ Transform:
   - {fileID: 1065738321647090033}
   - {fileID: 1394426206559237690}
   - {fileID: 2769714703000853477}
-  - {fileID: 7659678924024461725}
   - {fileID: 3293810478499186173}
   - {fileID: 3361537704303813695}
   m_Father: {fileID: 0}
@@ -7190,7 +7100,7 @@ MonoBehaviour:
   cross: {fileID: 8831892675828346128}
   explosionEffect: {fileID: 2433282508537954060, guid: 0ef8872efcc75064bbd917c5c04a02e3, type: 3}
   networkVidas:
-    m_InternalValue: 3
+    m_InternalValue: 10
   screenShakeAmmount: 0.5
   screenShakeFrequency: 6
   engineParticleSystem: {fileID: 8891297334280618237, guid: c4ed38c72957f2241ad144a1614956d9, type: 3}
@@ -7203,7 +7113,7 @@ MonoBehaviour:
   turboStartSpeed: 7
   turboStartSize: 0.4
   turboStartLifetime: 0.3
-  fastTurnSpeedMultiplier: 0.3
+  fastTurnSpeedMultiplier: 0.7
   fastTurnRotationMultiplier: 3
 --- !u!114 &9145645886458654313
 MonoBehaviour:
@@ -7304,7 +7214,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
-  NetworkTransformExpanded: 0
+  NetworkTransformExpanded: 1
   AutoOwnerAuthorityTickOffset: 1
   PositionInterpolationType: 0
   RotationInterpolationType: 0
@@ -7324,9 +7234,9 @@ MonoBehaviour:
   SyncRotAngleX: 1
   SyncRotAngleY: 1
   SyncRotAngleZ: 1
-  SyncScaleX: 1
-  SyncScaleY: 1
-  SyncScaleZ: 1
+  SyncScaleX: 0
+  SyncScaleY: 0
+  SyncScaleZ: 0
   PositionThreshold: 0.001
   RotAngleThreshold: 0.01
   ScaleThreshold: 0.01
@@ -7368,7 +7278,6 @@ MonoBehaviour:
   fireRate: 10
   laserRange: 500
   laserDuration: 0.1
-  damage: 10
   laserLine: {fileID: 4222939324739490593}
   muzzleFlash: {fileID: 8194992990867289333, guid: 99bc28c0d45f51c4fbac01080b73edc7, type: 3}
   bulletTrailParticle: {fileID: 0}
@@ -7376,10 +7285,10 @@ MonoBehaviour:
   misil: {fileID: 9003380054984881706, guid: 8ae740c93d33cea499f74d16fa6dbf10, type: 3}
   misilPoint: {fileID: 2769714703000853477}
   misilSpeed: 50
-  misilAmmount: 3
+  misilAmmount: 7
   hitLayers:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 320
 --- !u!1 &8269390687836267147
 GameObject:
   m_ObjectHideFlags: 0
@@ -7529,7 +7438,7 @@ GameObject:
   - component: {fileID: 858496653836780187}
   - component: {fileID: 6321031933928861046}
   m_Layer: 8
-  m_Name: ala2
+  m_Name: Wing
   m_TagString: Alas
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7543,12 +7452,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8974243099591600324}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.92458, y: -0.496, z: -0.349}
-  m_LocalScale: {x: 1.3649999, y: 0.5151534, z: 0.46292}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 1.9419351, y: 0.46666458, z: -2.4433324}
+  m_LocalScale: {x: 4.5499988, y: 1.7171779, z: 1.5430665}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 7659678924024461725}
+  m_Father: {fileID: 7392546238368405080}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!65 &6321031933928861046
 BoxCollider:

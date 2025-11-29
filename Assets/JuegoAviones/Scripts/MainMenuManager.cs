@@ -23,9 +23,10 @@ public class MainMenuManager : MonoBehaviour
         return NetworkManager.Singleton.StartHost() ? joinCode : null;
     }
 
-    public async void Host()
+    public void Host()
     {
-        print (await StartHostWithRelay(2, "udp"));
+        //print (await StartHostWithRelay(2, "udp"));
+        NetworkManager.Singleton.StartHost();
         EndSelection();
     }
     public void Client()
