@@ -7,7 +7,7 @@ using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
 using UnityEngine;
 
-public class MainMenuManager : MonoBehaviour
+public class HostClientMenuManager : MonoBehaviour
 {
     public async Task<string> StartHostWithRelay(int maxConnections, string connectionType)
     {
