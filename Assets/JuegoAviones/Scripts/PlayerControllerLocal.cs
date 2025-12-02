@@ -48,7 +48,7 @@ public class PlayerControllerLocal : MonoBehaviour
     [SerializeField] private float fastTurnRotationMultiplier = 3f;
 
     [Header("SISTEMA DE HUMO - Configuración")]
-    [SerializeField] private GameObject smokePrefab; // Cambiado a GameObject para más flexibilidad
+    [SerializeField] private GameObject smokePrefab; 
     [SerializeField] private Transform[] smokePositions; // Donde quieres que salga el humo
     
     // Variables internas del humo
@@ -499,32 +499,4 @@ public class PlayerControllerLocal : MonoBehaviour
         }
     }
     
-    // MÉTODOS DE DEBUG - Puedes llamarlos desde el Inspector
-    [ContextMenu("Probar Humo Nivel 1")]
-    public void TestSmokeLevel1()
-    {
-        vidas = 2;
-        UpdateSmokeBasedOnHealth();
-    }
-    
-    [ContextMenu("Probar Humo Nivel 2")]
-    public void TestSmokeLevel2()
-    {
-        vidas = 1;
-        UpdateSmokeBasedOnHealth();
-    }
-    
-    [ContextMenu("Probar Humo Nivel 3")]
-    public void TestSmokeLevel3()
-    {
-        vidas = 0;
-        UpdateSmokeBasedOnHealth();
-    }
-    
-    [ContextMenu("Resetear Humo")]
-    public void ResetSmoke()
-    {
-        vidas = 3;
-        UpdateSmokeBasedOnHealth();
-    }
 }

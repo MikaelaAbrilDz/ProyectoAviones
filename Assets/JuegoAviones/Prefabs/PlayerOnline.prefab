@@ -391,6 +391,37 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.67775935, y: 0.15673728, z: 0.65684575}
   m_Center: {x: -0.1611224, y: -0.064223416, z: 0.02762634}
+--- !u!1 &3393322361392384974
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8360103990126013406}
+  m_Layer: 0
+  m_Name: SmokePoint2
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8360103990126013406
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3393322361392384974}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0.16, y: -0.174, z: 0.98}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7392546238368405080}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &3733049619966835719
 GameObject:
   m_ObjectHideFlags: 0
@@ -492,7 +523,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &3361537704303813695
 Transform:
   m_ObjectHideFlags: 0
@@ -502,7 +533,7 @@ Transform:
   m_GameObject: {fileID: 5127774207193121420}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.16, y: -0.35, z: -0.22}
+  m_LocalPosition: {x: -0.16, y: -0.174, z: -1.29}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -7045,6 +7076,7 @@ Transform:
   - {fileID: 2769714703000853477}
   - {fileID: 3293810478499186173}
   - {fileID: 3361537704303813695}
+  - {fileID: 8360103990126013406}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &9173074163649241504
@@ -7099,8 +7131,8 @@ MonoBehaviour:
   cameraPrefab: {fileID: 8695755974375431491, guid: fa329b09f1d6dd343b7d2cb6ec2a8b08, type: 3}
   cross: {fileID: 8831892675828346128}
   explosionEffect: {fileID: 2433282508537954060, guid: 0ef8872efcc75064bbd917c5c04a02e3, type: 3}
-  networkVidas:
-    m_InternalValue: 10
+  networkLifes:
+    m_InternalValue: 15
   screenShakeAmmount: 0.5
   screenShakeFrequency: 6
   engineParticleSystem: {fileID: 8891297334280618237, guid: c4ed38c72957f2241ad144a1614956d9, type: 3}
@@ -7115,6 +7147,10 @@ MonoBehaviour:
   turboStartLifetime: 0.3
   fastTurnSpeedMultiplier: 0.7
   fastTurnRotationMultiplier: 3
+  smokePrefab: {fileID: 8656522925564163052, guid: e509867be4f82f246a95eca1ee5a2d61, type: 3}
+  smokePositions:
+  - {fileID: 3361537704303813695}
+  - {fileID: 8360103990126013406}
 --- !u!114 &9145645886458654313
 MonoBehaviour:
   m_ObjectHideFlags: 0

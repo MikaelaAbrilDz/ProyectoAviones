@@ -48,6 +48,13 @@ public class PlayerControllerOnline : NetworkBehaviour
     [SerializeField] private float fastTurnSpeedMultiplier = 0.3f;
     [SerializeField] private float fastTurnRotationMultiplier = 3f;
 
+    [Header("SISTEMA DE HUMO - Configuración")]
+    [SerializeField] private GameObject smokePrefab; // Cambiado a GameObject para más flexibilidad
+    [SerializeField] private Transform[] smokePositions; // Donde quieres que salga el humo
+
+    // Variables internas del humo
+    private GameObject[] smokeInstances;
+
     ShootingSystemOnline shootingSystem;
 
     Vector2 rotation;
@@ -77,6 +84,7 @@ public class PlayerControllerOnline : NetworkBehaviour
             networkLifes.Value = value;
         }
     }
+
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
@@ -88,6 +96,7 @@ public class PlayerControllerOnline : NetworkBehaviour
         }
 
         InitializeEngineParticles();
+        InitializeSmokeSystem();
 
         if (!IsOwner)
         {
@@ -142,6 +151,45 @@ public class PlayerControllerOnline : NetworkBehaviour
         engineParticleInstance.Play();
     }
 
+    private void InitializeSmokeSystem()
+    {
+        if (smokePrefab == null)
+        {
+            Debug.LogError("¡SmokePrefab no está asignado en el Inspector!");
+            return;
+        }
+
+        if (smokePositions == null || smokePositions.Length == 0)
+        {
+            Debug.LogError("¡No hay SmokePositions asignadas en el Inspector!");
+            return;
+        }
+
+        // Crear array para almacenar las instancias de humo
+        smokeInstances = new GameObject[smokePositions.Length];
+
+        // Instanciar todos los humos pero desactivarlos inicialmente
+        for (int i = 0; i < smokePositions.Length; i++)
+        {
+            if (smokePositions[i] != null)
+            {
+                smokeInstances[i] = Instantiate(smokePrefab, smokePositions[i].position, smokePositions[i].rotation);
+                smokeInstances[i].transform.SetParent(smokePositions[i]);
+                smokeInstances[i].transform.localPosition = Vector3.zero;
+                smokeInstances[i].transform.localRotation = Quaternion.identity;
+
+                // Desactivar inicialmente
+                smokeInstances[i].SetActive(false);
+
+                Debug.Log($"Humo {i} instanciado en posición: {smokePositions[i].name}");
+            }
+            else
+            {
+                Debug.LogError($"SmokePosition[{i}] no está asignado!");
+            }
+        }
+    }
+
     private void ConfigureEngineParticles()
     {
         if (engineParticleInstance == null) return;
@@ -186,10 +234,9 @@ public class PlayerControllerOnline : NetworkBehaviour
     {
         if (!IsOwner || isDead) return;
 
-
         Movement();
         CheckForBuildings();
-        if (Input.GetKeyDown(KeyCode.V)) print(life);
+
         if (pointer != null && otherPlayer != null)
             pointer.rotation = Quaternion.LookRotation(otherPlayer.transform.position - transform.position);
     }
@@ -416,6 +463,9 @@ public class PlayerControllerOnline : NetworkBehaviour
             engineParticleInstance.Stop();
         }
 
+        // Detener todos los humos al morir
+        StopAllSmoke();
+
         if (isFiring && shootingSystem != null)
         {
             shootingSystem.StopFiring();
@@ -435,7 +485,8 @@ public class PlayerControllerOnline : NetworkBehaviour
             collider.enabled = false;
         }
     }
-    [ClientRpc (RequireOwnership = false)]
+
+    [ClientRpc(RequireOwnership = false)]
     void DestroyAirplaneClientRpc()
     {
         isDead = true;
@@ -444,6 +495,9 @@ public class PlayerControllerOnline : NetworkBehaviour
         {
             engineParticleInstance.Stop();
         }
+
+        // Detener todos los humos al morir
+        StopAllSmoke();
 
         if (isFiring && shootingSystem != null)
         {
@@ -471,7 +525,7 @@ public class PlayerControllerOnline : NetworkBehaviour
         {
             // Reactivar el avión
             isDead = false;
-            life = 3;
+            networkLifes.Value = 3;
 
             foreach (var child in GetComponentsInChildren<MeshRenderer>())
             {
@@ -487,6 +541,9 @@ public class PlayerControllerOnline : NetworkBehaviour
             {
                 engineParticleInstance.Play();
             }
+
+            // Resetear humo
+            UpdateSmokeBasedOnHealth();
 
             // Buscar spawn point disponible
             GameObject[] spawns = GameObject.FindGameObjectsWithTag("Spawn");
@@ -507,22 +564,177 @@ public class PlayerControllerOnline : NetworkBehaviour
     {
         SceneManager.LoadScene("OnlineMultiScene");
     }
+
     public void TakeDamage(int damage)
     {
-
         if (isDead) return;
         if (!IsServer)
         {
             TakeDamageServerRpc(damage);
             return;
-        } 
-        
+        }
+
         life -= damage;
+
+        // Actualizar humo cuando se recibe daño (solo en el servidor)
+        UpdateSmokeBasedOnHealth();
     }
+
     [ServerRpc(RequireOwnership = false)]
     void TakeDamageServerRpc(int damage)
     {
+        if (isDead) return;
+
         life -= damage;
+
+        // Actualizar humo cuando se recibe daño
+        UpdateSmokeBasedOnHealthClientRpc();
+    }
+
+    [ClientRpc]
+    void UpdateSmokeBasedOnHealthClientRpc()
+    {
+        UpdateSmokeBasedOnHealth();
+    }
+
+    // Método para actualizar el humo según las vidas
+    private void UpdateSmokeBasedOnHealth()
+    {
+        if (isDead || smokeInstances == null) return;
+
+        // Calcular cuántas vidas faltan (asumiendo 3 vidas máximas)
+        int vidasFaltantes = 3 - networkLifes.Value;
+
+        Debug.Log($"Actualizando humo online. Vidas: {networkLifes.Value}, Faltantes: {vidasFaltantes}");
+
+        // Activar/desactivar humos según vidas faltantes
+        for (int i = 0; i < smokeInstances.Length; i++)
+        {
+            if (smokeInstances[i] != null)
+            {
+                if (i < vidasFaltantes)
+                {
+                    // Activar este humo si le faltan suficientes vidas
+                    if (!smokeInstances[i].activeSelf)
+                    {
+                        smokeInstances[i].SetActive(true);
+                        Debug.Log($"Activando humo online {i}");
+                    }
+                }
+                else
+                {
+                    // Desactivar este humo si ya no le faltan tantas vidas
+                    if (smokeInstances[i].activeSelf)
+                    {
+                        smokeInstances[i].SetActive(false);
+                        Debug.Log($"Desactivando humo online {i}");
+                    }
+                }
+            }
+        }
+    }
+
+    // Método para detener todos los humos
+    private void StopAllSmoke()
+    {
+        if (smokeInstances == null) return;
+
+        for (int i = 0; i < smokeInstances.Length; i++)
+        {
+            if (smokeInstances[i] != null && smokeInstances[i].activeSelf)
+            {
+                smokeInstances[i].SetActive(false);
+            }
+        }
+    }
+
+    public void DañoAla()
+    {
+        if (isDead) return;
+
+        if (!IsServer)
+        {
+            DañoAlaServerRpc();
+            return;
+        }
+
+        life--;
+        Debug.Log($"Daño al ala! Vidas restantes: {life}");
+
+        // Actualizar humo
+        UpdateSmokeBasedOnHealth();
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    void DañoAlaServerRpc()
+    {
+        life--;
+        UpdateSmokeBasedOnHealthClientRpc();
+    }
+
+    public void DañoCabina()
+    {
+        if (isDead) return;
+
+        if (!IsServer)
+        {
+            DañoCabinaServerRpc();
+            return;
+        }
+
+        life -= 2;
+        Debug.Log($"Daño a la cabina! Vidas restantes: {life}");
+
+        // Actualizar humo
+        UpdateSmokeBasedOnHealth();
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    void DañoCabinaServerRpc()
+    {
+        life -= 2;
+        UpdateSmokeBasedOnHealthClientRpc();
+    }
+
+    // MÉTODOS DE DEBUG - Puedes llamarlos desde el Inspector
+    [ContextMenu("Probar Humo Nivel 1")]
+    public void TestSmokeLevel1()
+    {
+        if (IsServer)
+        {
+            networkLifes.Value = 2;
+            UpdateSmokeBasedOnHealthClientRpc();
+        }
+    }
+
+    [ContextMenu("Probar Humo Nivel 2")]
+    public void TestSmokeLevel2()
+    {
+        if (IsServer)
+        {
+            networkLifes.Value = 1;
+            UpdateSmokeBasedOnHealthClientRpc();
+        }
+    }
+
+    [ContextMenu("Probar Humo Nivel 3")]
+    public void TestSmokeLevel3()
+    {
+        if (IsServer)
+        {
+            networkLifes.Value = 0;
+            UpdateSmokeBasedOnHealthClientRpc();
+        }
+    }
+
+    [ContextMenu("Resetear Humo")]
+    public void ResetSmoke()
+    {
+        if (IsServer)
+        {
+            networkLifes.Value = 3;
+            UpdateSmokeBasedOnHealthClientRpc();
+        }
     }
 
     public override void OnDestroy()
