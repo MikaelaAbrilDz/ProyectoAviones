@@ -35,17 +35,24 @@ public class PlayerControllerLocal : MonoBehaviour
     public float normalEmissionRate = 15f;
     public float normalStartSpeed = 8f;
     public float normalStartSize = 0.3f;
-    public float normalStartLifetime = 0.3f; // REDUCIDO
+    public float normalStartLifetime = 0.3f;
 
     [Header("Configuración Partículas - Turbo")]
     public float turboEmissionRate = 30f;
     public float turboStartSpeed = 20f;
     public float turboStartSize = 0.6f;
-    public float turboStartLifetime = 0.4f; // REDUCIDO
+    public float turboStartLifetime = 0.4f;
 
     [Header("Configuración Fast Turn")]
     [SerializeField] private float fastTurnSpeedMultiplier = 0.3f;
     [SerializeField] private float fastTurnRotationMultiplier = 3f;
+
+    [Header("SISTEMA DE HUMO - Configuración")]
+    [SerializeField] private GameObject smokePrefab; // Cambiado a GameObject para más flexibilidad
+    [SerializeField] private Transform[] smokePositions; // Donde quieres que salga el humo
+    
+    // Variables internas del humo
+    private GameObject[] smokeInstances;
 
     // Referencia al shooting system
     ShootingSystemLocal shootingSystem;
@@ -72,7 +79,11 @@ public class PlayerControllerLocal : MonoBehaviour
         }
 
         InitializeEngineParticles();
+        InitializeSmokeSystem();
         GetOtherPlayer();
+        
+        // DEBUG: Verificar inicialización
+        Debug.Log($"Sistema de humo inicializado. Posiciones: {smokePositions?.Length}, Prefab: {smokePrefab != null}");
     }
 
     private void InitializeEngineParticles()
@@ -88,6 +99,45 @@ public class PlayerControllerLocal : MonoBehaviour
         engineParticleInstance.Play();
     }
 
+    private void InitializeSmokeSystem()
+    {
+        if (smokePrefab == null)
+        {
+            Debug.LogError("¡SmokePrefab no está asignado en el Inspector!");
+            return;
+        }
+
+        if (smokePositions == null || smokePositions.Length == 0)
+        {
+            Debug.LogError("¡No hay SmokePositions asignadas en el Inspector!");
+            return;
+        }
+
+        // Crear array para almacenar las instancias de humo
+        smokeInstances = new GameObject[smokePositions.Length];
+        
+        // Instanciar todos los humos pero desactivarlos inicialmente
+        for (int i = 0; i < smokePositions.Length; i++)
+        {
+            if (smokePositions[i] != null)
+            {
+                smokeInstances[i] = Instantiate(smokePrefab, smokePositions[i].position, smokePositions[i].rotation);
+                smokeInstances[i].transform.SetParent(smokePositions[i]);
+                smokeInstances[i].transform.localPosition = Vector3.zero;
+                smokeInstances[i].transform.localRotation = Quaternion.identity;
+                
+                // Desactivar inicialmente
+                smokeInstances[i].SetActive(false);
+                
+                Debug.Log($"Humo {i} instanciado en posición: {smokePositions[i].name}");
+            }
+            else
+            {
+                Debug.LogError($"SmokePosition[{i}] no está asignado!");
+            }
+        }
+    }
+
     private void ConfigureEngineParticles()
     {
         if (engineParticleInstance == null) return;
@@ -97,12 +147,12 @@ public class PlayerControllerLocal : MonoBehaviour
         var shape = engineParticleInstance.shape;
 
         main.loop = true;
-        main.startLifetime = normalStartLifetime; // USANDO VARIABLE PÚBLICA
+        main.startLifetime = normalStartLifetime;
         main.startSpeed = normalStartSpeed;
         main.startSize = normalStartSize;
         main.startColor = new Color(0.3f, 0.6f, 1f, 0.8f);
         main.simulationSpace = ParticleSystemSimulationSpace.Local;
-        main.maxParticles = 30; // REDUCIDO
+        main.maxParticles = 30;
 
         emission.rateOverTime = normalEmissionRate;
 
@@ -185,7 +235,6 @@ public class PlayerControllerLocal : MonoBehaviour
         float currentSpeed = speed;
         float rotationMultiplier = 50f;
 
-        // Aplicar modificadores de Fast Turn
         if (isFastTurnActive)
         {
             currentSpeed *= fastTurnSpeedMultiplier;
@@ -246,7 +295,7 @@ public class PlayerControllerLocal : MonoBehaviour
 
             main.startSpeed = turboStartSpeed;
             main.startSize = turboStartSize;
-            main.startLifetime = turboStartLifetime; // USANDO VARIABLE PÚBLICA
+            main.startLifetime = turboStartLifetime;
             emission.rateOverTime = turboEmissionRate;
             main.startColor = new Color(1f, 0.6f, 0.2f, 1f);
         }
@@ -261,7 +310,7 @@ public class PlayerControllerLocal : MonoBehaviour
 
             main.startSpeed = normalStartSpeed;
             main.startSize = normalStartSize;
-            main.startLifetime = normalStartLifetime; // USANDO VARIABLE PÚBLICA
+            main.startLifetime = normalStartLifetime;
             emission.rateOverTime = normalEmissionRate;
             main.startColor = new Color(0.3f, 0.6f, 1f, 0.8f);
         }
@@ -337,6 +386,9 @@ public class PlayerControllerLocal : MonoBehaviour
             engineParticleInstance.Stop();
         }
 
+        // Detener todos los humos al morir
+        StopAllSmoke();
+
         if (isFiring && shootingSystem != null)
         {
             shootingSystem.StopFiring();
@@ -364,11 +416,67 @@ public class PlayerControllerLocal : MonoBehaviour
         SceneManager.LoadScene("LocalMultiScene");
     }
 
+    // Método para actualizar el humo según las vidas
+    private void UpdateSmokeBasedOnHealth()
+    {
+        if (isDead || smokeInstances == null) return;
+        
+        // Calcular cuántas vidas faltan (asumiendo 3 vidas máximas)
+        int vidasFaltantes = 3 - vidas;
+        
+        Debug.Log($"Actualizando humo. Vidas: {vidas}, Faltantes: {vidasFaltantes}");
+        
+        // Activar/desactivar humos según vidas faltantes
+        for (int i = 0; i < smokeInstances.Length; i++)
+        {
+            if (smokeInstances[i] != null)
+            {
+                if (i < vidasFaltantes)
+                {
+                    // Activar este humo si le faltan suficientes vidas
+                    if (!smokeInstances[i].activeSelf)
+                    {
+                        smokeInstances[i].SetActive(true);
+                        Debug.Log($"Activando humo {i}");
+                    }
+                }
+                else
+                {
+                    // Desactivar este humo si ya no le faltan tantas vidas
+                    if (smokeInstances[i].activeSelf)
+                    {
+                        smokeInstances[i].SetActive(false);
+                        Debug.Log($"Desactivando humo {i}");
+                    }
+                }
+            }
+        }
+    }
+
+    // Método para detener todos los humos
+    private void StopAllSmoke()
+    {
+        if (smokeInstances == null) return;
+        
+        for (int i = 0; i < smokeInstances.Length; i++)
+        {
+            if (smokeInstances[i] != null && smokeInstances[i].activeSelf)
+            {
+                smokeInstances[i].SetActive(false);
+            }
+        }
+    }
+
     public void DañoAla()
     {
         if (isDead) return;
 
         vidas--;
+        Debug.Log($"Daño al ala! Vidas restantes: {vidas}");
+        
+        // Actualizar humo
+        UpdateSmokeBasedOnHealth();
+        
         if (vidas <= 0)
         {
             DestroyAirplane();
@@ -380,9 +488,43 @@ public class PlayerControllerLocal : MonoBehaviour
         if (isDead) return;
 
         vidas -= 2;
+        Debug.Log($"Daño a la cabina! Vidas restantes: {vidas}");
+        
+        // Actualizar humo
+        UpdateSmokeBasedOnHealth();
+        
         if (vidas <= 0)
         {
             DestroyAirplane();
         }
+    }
+    
+    // MÉTODOS DE DEBUG - Puedes llamarlos desde el Inspector
+    [ContextMenu("Probar Humo Nivel 1")]
+    public void TestSmokeLevel1()
+    {
+        vidas = 2;
+        UpdateSmokeBasedOnHealth();
+    }
+    
+    [ContextMenu("Probar Humo Nivel 2")]
+    public void TestSmokeLevel2()
+    {
+        vidas = 1;
+        UpdateSmokeBasedOnHealth();
+    }
+    
+    [ContextMenu("Probar Humo Nivel 3")]
+    public void TestSmokeLevel3()
+    {
+        vidas = 0;
+        UpdateSmokeBasedOnHealth();
+    }
+    
+    [ContextMenu("Resetear Humo")]
+    public void ResetSmoke()
+    {
+        vidas = 3;
+        UpdateSmokeBasedOnHealth();
     }
 }
