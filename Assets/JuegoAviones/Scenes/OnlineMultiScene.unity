@@ -945,10 +945,10 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 2048176235}
-        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
-        m_MethodName: SetActive
-        m_Mode: 6
+      - m_Target: {fileID: 2048176239}
+        m_TargetAssemblyTypeName: LoginManager, Assembly-CSharp
+        m_MethodName: StartLogin
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -2600,7 +2600,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &795378814
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3755,10 +3755,10 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1676923521}
-        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
-        m_MethodName: SetActive
-        m_Mode: 6
+      - m_Target: {fileID: 1676923525}
+        m_TargetAssemblyTypeName: RegisterManager, Assembly-CSharp
+        m_MethodName: StartRegister
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -4789,6 +4789,7 @@ GameObject:
   - component: {fileID: 1676923522}
   - component: {fileID: 1676923524}
   - component: {fileID: 1676923523}
+  - component: {fileID: 1676923525}
   m_Layer: 5
   m_Name: PanelRegister
   m_TagString: Untagged
@@ -4858,6 +4859,22 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1676923521}
   m_CullTransparentMesh: 1
+--- !u!114 &1676923525
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1676923521}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ccfd92e41bfa4e43993cafd727e9961, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RegisterManager
+  usernameField: {fileID: 1192529996}
+  passwordField: {fileID: 973871208}
+  resultText: {fileID: 674851113}
+  canvasToDeactivate: {fileID: 1676923521}
 --- !u!1 &1695023103
 GameObject:
   m_ObjectHideFlags: 0
@@ -6166,6 +6183,7 @@ GameObject:
   - component: {fileID: 2048176236}
   - component: {fileID: 2048176238}
   - component: {fileID: 2048176237}
+  - component: {fileID: 2048176239}
   m_Layer: 5
   m_Name: PanelLogIn
   m_TagString: Untagged
@@ -6235,6 +6253,22 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2048176235}
   m_CullTransparentMesh: 1
+--- !u!114 &2048176239
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2048176235}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce7d8a960566bb74cbadfcc68ec60bad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LoginManager
+  usernameField: {fileID: 1458580183}
+  passwordField: {fileID: 1831815022}
+  resultText: {fileID: 428151}
+  canvasToDeactivate: {fileID: 795378813}
 --- !u!1001 &7825556228013304540
 PrefabInstance:
   m_ObjectHideFlags: 0
