@@ -7,7 +7,22 @@ public class BuildingManager : NetworkBehaviour
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
+
         //GetComponent<NetworkAnimator>().Animator = GetComponent<Animator>();
+    }
+    public void PlayParticles()
+    {
+        if (IsServer)
+        {
+            PlayParticlesRpc();
+            return;
+        }
+            GetComponentInChildren<ParticleSystem>().Play();
+    }
+    [Rpc(SendTo.ClientsAndHost)]
+    private void PlayParticlesRpc()
+    {
+        GetComponentInChildren<ParticleSystem>().Play();
     }
     [Rpc(SendTo.ClientsAndHost)]
     private void CollapseRpc()
