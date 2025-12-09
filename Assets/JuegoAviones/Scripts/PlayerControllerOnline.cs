@@ -553,6 +553,7 @@ public class PlayerControllerOnline : NetworkBehaviour
     {
 
         if (IsServer) GetComponent<SpawnManager>().RespawnPlayer();
+        GetComponent<ShootingSystemOnline>()._misilAmmount = GetComponent<ShootingSystemOnline>().maxMisil;
         isTurboActive = false;
         if (IsServer)
         {
@@ -570,6 +571,7 @@ public class PlayerControllerOnline : NetworkBehaviour
 
         PlayerControllerOnline otherPlayerScript = otherPlayer.GetComponent<PlayerControllerOnline>();
         if (IsServer) otherPlayerScript.GetComponent<SpawnManager>().RespawnPlayer();
+        otherPlayerScript.GetComponent<ShootingSystemOnline>()._misilAmmount = otherPlayerScript.GetComponent<ShootingSystemOnline>().maxMisil;
         otherPlayerScript.isTurboActive = false;
         if (IsServer)
         {

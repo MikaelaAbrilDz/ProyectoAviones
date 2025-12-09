@@ -13,7 +13,7 @@ public class MisilControllerOnline : NetworkBehaviour
     private void Start()
     {
         // Destruir el misil después de un tiempo por si no colisiona
-        Destroy(gameObject, 10f);
+        Invoke(nameof(DestroyMissile), 10f);
     }
 
     private void Update()
@@ -79,28 +79,38 @@ public class MisilControllerOnline : NetworkBehaviour
     {
         if (explosionEffect != null)
         {
-            if (!IsServer)
+            if (shooter.GetComponent<PlayerControllerOnline>().IsServer)
             {
-                SpawnExplosionEffectServerRpc(position);
+                SpawnExplosionEffectClientRpc(position);
                 return;
-            } 
-            Instantiate(explosionEffect, position, Quaternion.identity);
+            }
+            SpawnExplosionEffectServerRpc(position);
         }
+    }
+    [ClientRpc(RequireOwnership = false)]
+    private void SpawnExplosionEffectClientRpc(Vector3 position)
+    {
+        Instantiate(explosionEffect, position, Quaternion.identity);
     }
     [ServerRpc(RequireOwnership = false)]
     private void SpawnExplosionEffectServerRpc(Vector3 position)
     {
-        Instantiate(explosionEffect, position, Quaternion.identity);
+        SpawnExplosionEffectClientRpc(position);
     }
 
     private void DestroyMissile()
     {
-        if (IsServer)
+        if (shooter.GetComponent<PlayerControllerOnline>().IsServer)
         {
             DestroyMissileClientRpc();
             return;
         }
-        Destroy(gameObject);
+        DestroyMissileServerRpc();
+    }
+    [ServerRpc(RequireOwnership = false)]
+    private void DestroyMissileServerRpc()
+    {
+        DestroyMissileClientRpc();
     }
     [ClientRpc(RequireOwnership = false)]
     private void DestroyMissileClientRpc()

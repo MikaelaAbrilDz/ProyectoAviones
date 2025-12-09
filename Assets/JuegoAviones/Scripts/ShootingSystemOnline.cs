@@ -20,7 +20,8 @@ public class ShootingSystemOnline : NetworkBehaviour
     [SerializeField] private GameObject misil;
     [SerializeField] private Transform misilPoint;
     [SerializeField] private float misilSpeed = 20f;
-    [SerializeField] private int misilAmmount = 3;
+    [HideInInspector] public int maxMisil = 7;
+    private int misilAmmount = 7;
 
     [Header("Configuración de Layers")]
     [SerializeField] private LayerMask hitLayers;
@@ -57,6 +58,11 @@ public class ShootingSystemOnline : NetworkBehaviour
         {
             Debug.LogError("FirePoint no asignado en ShootingSystemOnline!");
         }
+    }
+    public int _misilAmmount
+    {
+        get { return misilAmmount; }
+        set { misilAmmount = value; }
     }
 
     public void StartFiring()
@@ -186,14 +192,9 @@ public class ShootingSystemOnline : NetworkBehaviour
 
     public void ShootMisil()
     {
-        if (misilAmmount > 0 && playerController != null && playerController.life > 0)
+        if (_misilAmmount > 0 && playerController != null && playerController.life > 0)
         {
-            if (misil == null || misilPoint == null)
-            {
-                Debug.LogError("Misil o misilPoint no asignado!");
-                return;
-            }
-
+            _misilAmmount--;
 
             if (IsServer)
             {
@@ -201,16 +202,8 @@ public class ShootingSystemOnline : NetworkBehaviour
                 return;
             }
 
-            GameObject misilInstanciado = Instantiate(misil, misilPoint.position, transform.rotation);
-            misilInstanciado.GetComponent<MisilControllerOnline>().shooter = gameObject;
-            // Configurar el misil
-            MisilControllerOnline misilController = misilInstanciado.GetComponent<MisilControllerOnline>();
-            if (misilController != null)
-            {
-                // Puedes configurar parámetros específicos aquí si es necesario
-            }
+            ShootMisilServerRpc();
 
-            misilAmmount--;
         }
     }
 
@@ -218,6 +211,7 @@ public class ShootingSystemOnline : NetworkBehaviour
     private void ShootMisilClientRpc()
     {
         GameObject misilInstanciado = Instantiate(misil, misilPoint.position, transform.rotation);
+        misilInstanciado.GetComponent<NetworkObject>().Spawn();
         misilInstanciado.GetComponent<MisilControllerOnline>().shooter = gameObject;
         // Configurar el misil
         MisilControllerOnline misilController = misilInstanciado.GetComponent<MisilControllerOnline>();
@@ -226,7 +220,11 @@ public class ShootingSystemOnline : NetworkBehaviour
             // Puedes configurar parámetros específicos aquí si es necesario
         }
 
-        misilAmmount--;
+    }
+    [ServerRpc(RequireOwnership = false)]
+    private void ShootMisilServerRpc()
+    {
+        ShootMisilClientRpc();
     }
 
     public void SetLaserConfig(float newFireRate, float newRange, float newDamage)
