@@ -7,47 +7,137 @@ using UnityEngine.InputSystem;
 public class PlayerControllerLocal : MonoBehaviour
 {
     [SerializeField] CinemachineCamera speedCam;
-    [SerializeField] LayerMask buildingLayerMask; // Capa para los edificios
-    [SerializeField] float raycastDistance = 10f; // Distancia del raycast
-    [SerializeField] Transform[] raycastOrigins; // Puntos de origen para los raycasts //NO LOS HEMOS PUESTO, DE MOMENTO LO COGE DESDE EL CENTRO DEL AVION
+    [SerializeField] LayerMask buildingLayerMask;
+    [SerializeField] float raycastDistance = 10f;
+    [SerializeField] Transform[] raycastOrigins;
     [SerializeField] Transform camFollowed;
     [SerializeField] GameObject cameraPrefab;
+    [SerializeField] GameObject cross;
     GameObject cameraObj;
+    Transform pointer;
+    Transform otherPlayer;
 
     public GameObject explosionEffect;
 
-    //Llamada la scrip de ShootingSystemOnline
+    [Header("Vidas")]
+    [SerializeField] private int vidas = 3;
+    public int Vidas => vidas;
+
+    [Header("Screen Shake - Disparo")]
+    [SerializeField] float screenShakeAmmount = 0.5f;
+    [SerializeField] float screenShakeFrequency = 6f;
+
+    [Header("Sistema de Partículas del Motor")]
+    [SerializeField] private ParticleSystem engineParticleSystem;
+    [SerializeField] private Transform enginePosition;
+
+    [Header("Configuración Partículas - Normal")]
+    public float normalEmissionRate = 15f;
+    public float normalStartSpeed = 8f;
+    public float normalStartSize = 0.3f;
+    public float normalStartLifetime = 0.3f; // REDUCIDO
+
+    [Header("Configuración Partículas - Turbo")]
+    public float turboEmissionRate = 30f;
+    public float turboStartSpeed = 20f;
+    public float turboStartSize = 0.6f;
+    public float turboStartLifetime = 0.4f; // REDUCIDO
+
+    [Header("Configuración Fast Turn")]
+    [SerializeField] private float fastTurnSpeedMultiplier = 0.3f;
+    [SerializeField] private float fastTurnRotationMultiplier = 3f;
+
+    // Referencia al shooting system
     ShootingSystemLocal shootingSystem;
 
     Vector2 rotation;
     float inclination = 0;
     float speed = 10f;
     int maxInclination = 50;
-    float inclinationSpeed = 50f;
+    float inclinationSpeed = 100f;
     bool isDead = false;
-    bool isFiring = false; // Estado de disparo
+    bool isFiring = false;
+    bool isTurboActive = false;
+    bool isFastTurnActive = false;
+
+    private ParticleSystem engineParticleInstance;
 
     private void Start()
     {
-        
-        // OBTENER LA REFERENCIA AL SHOOTING SYSTEM
         shootingSystem = GetComponent<ShootingSystemLocal>();
-        
-        // Si no se asignan puntos de origen, usar la posici�n del avi�n --> (ESTO ES LO QUE HACE)
-        /*if (raycastOrigins == null || raycastOrigins.Length == 0)
+
+        if (raycastOrigins == null || raycastOrigins.Length == 0)
         {
             raycastOrigins = new Transform[] { transform };
-        }*/
+        }
 
-        // Generar c�mara
+        InitializeEngineParticles();
+        GetOtherPlayer();
     }
+
+    private void InitializeEngineParticles()
+    {
+        if (enginePosition == null || engineParticleSystem == null) return;
+
+        engineParticleInstance = Instantiate(engineParticleSystem, enginePosition.position, enginePosition.rotation);
+        engineParticleInstance.transform.SetParent(enginePosition);
+        engineParticleInstance.transform.localPosition = Vector3.zero;
+        engineParticleInstance.transform.localRotation = Quaternion.identity;
+
+        ConfigureEngineParticles();
+        engineParticleInstance.Play();
+    }
+
+    private void ConfigureEngineParticles()
+    {
+        if (engineParticleInstance == null) return;
+
+        var main = engineParticleInstance.main;
+        var emission = engineParticleInstance.emission;
+        var shape = engineParticleInstance.shape;
+
+        main.loop = true;
+        main.startLifetime = normalStartLifetime; // USANDO VARIABLE PÚBLICA
+        main.startSpeed = normalStartSpeed;
+        main.startSize = normalStartSize;
+        main.startColor = new Color(0.3f, 0.6f, 1f, 0.8f);
+        main.simulationSpace = ParticleSystemSimulationSpace.Local;
+        main.maxParticles = 30; // REDUCIDO
+
+        emission.rateOverTime = normalEmissionRate;
+
+        shape.shapeType = ParticleSystemShapeType.Cone;
+        shape.angle = 8f;
+        shape.radius = 0.03f;
+
+        engineParticleInstance.transform.localRotation = Quaternion.Euler(0, 180f, 0);
+    }
+
+    public void GetOtherPlayer()
+    {
+        if (otherPlayer == null)
+        {
+            foreach (var players in FindObjectsByType<PlayerControllerLocal>(FindObjectsSortMode.None))
+            {
+                if (players != this) otherPlayer = players.transform;
+            }
+            otherPlayer.GetComponent<PlayerControllerLocal>().GetOtherPlayer();
+        }
+    }
+
     void Update()
     {
-        if (!isDead) Movement();
-        CheckForBuildings();
+        if (!isDead)
+        {
+            Movement();
+            CheckForBuildings();
+
+            if (pointer != null && otherPlayer != null)
+                pointer.rotation = Quaternion.LookRotation(otherPlayer.transform.position - transform.position);
+        }
     }
 
-    public void AtJoining(OutputChannels channel)
+    public void AtJoining(OutputChannels channel, LayerMask layerMain, LayerMask layerUI, int playerID)
     {
         cameraObj = Instantiate(cameraPrefab);
         foreach (var camera in cameraObj.GetComponentsInChildren<CinemachineCamera>())
@@ -55,71 +145,162 @@ public class PlayerControllerLocal : MonoBehaviour
             camera.Target.TrackingTarget = camFollowed;
             camera.Target.LookAtTarget = camFollowed;
             if (camera.name == "PlayerCamSpeed") speedCam = camera;
-
             camera.OutputChannel = channel;
         }
-        GetComponent<PlayerInput>().camera = cameraObj.GetComponentInChildren<Camera>();
-
+        Camera mainCam = cameraObj.GetComponentInChildren<Camera>();
+        GetComponent<PlayerInput>().camera = mainCam;
+        mainCam.cullingMask = layerMain;
+        foreach (var cam in mainCam.GetComponentsInChildren<Camera>())
+        {
+            if (cam.name == "PointerCam") cam.cullingMask = layerUI;
+        }
         cameraObj.GetComponentInChildren<CinemachineBrain>().ChannelMask = channel;
+        pointer = cameraObj.GetComponent<PointerManager>().pointerTrnsfm;
+        if (playerID == 0)
+        {
+            foreach (var cross in cross.GetComponentsInChildren<Transform>())
+            {
+                cross.gameObject.layer = LayerMask.NameToLayer("Cross_P0");
+            }
+            foreach (var pointer in pointer.GetComponentsInChildren<Transform>())
+            {
+                pointer.gameObject.layer = LayerMask.NameToLayer("3DUI_P0");
+            }
+        }
+        else
+        {
+            foreach (var cross in cross.GetComponentsInChildren<Transform>())
+            {
+                cross.gameObject.layer = LayerMask.NameToLayer("Cross_P1");
+            }
+            foreach (var pointer in pointer.GetComponentsInChildren<Transform>())
+            {
+                pointer.gameObject.layer = LayerMask.NameToLayer("3DUI_P1");
+            }
+        }
     }
 
     private void Movement()
     {
-        //APLICAR EL MOVIMIENTO AL TRANSFORM
-        transform.position += transform.forward * Time.deltaTime * speed;
-        transform.eulerAngles = new Vector3(transform.eulerAngles.x + rotation.y * Time.deltaTime * 50, transform.eulerAngles.y + rotation.x * Time.deltaTime * 50,
-            inclination);
+        float currentSpeed = speed;
+        float rotationMultiplier = 50f;
 
-        //C�LCULOS PARA INCLINACI�N SMOOTH
+        // Aplicar modificadores de Fast Turn
+        if (isFastTurnActive)
+        {
+            currentSpeed *= fastTurnSpeedMultiplier;
+            rotationMultiplier *= fastTurnRotationMultiplier;
+        }
+
+        transform.position += transform.forward * Time.deltaTime * currentSpeed;
+        transform.eulerAngles = new Vector3(
+            transform.eulerAngles.x + rotation.y * Time.deltaTime * rotationMultiplier,
+            transform.eulerAngles.y + rotation.x * Time.deltaTime * rotationMultiplier,
+            inclination
+        );
         inclination = Mathf.MoveTowards(inclination, -rotation.x * maxInclination, Time.deltaTime * inclinationSpeed);
     }
+
     private void OnMove(InputValue movementValue)
     {
         rotation.x = movementValue.Get<Vector2>().x;
         rotation.y = movementValue.Get<Vector2>().y;
     }
-    private void OnTurbo(InputValue turbo)
-    {
-        if (turbo.isPressed)
-        {
-            speed = 25f;
-            speedCam.Priority = 1;
-        }
-        else
-        {
-            speed = 10f;
-            speedCam.Priority = -1;
 
+    private void OnFastTurn(InputValue fastTurnValue)
+    {
+        if (fastTurnValue.isPressed && !isFastTurnActive && !isDead)
+        {
+            isFastTurnActive = true;
+        }
+        else if (!fastTurnValue.isPressed && isFastTurnActive)
+        {
+            isFastTurnActive = false;
         }
     }
-    //Disparo normal
+
+    private void OnTurbo(InputValue turbo)
+    {
+        if (turbo.isPressed && !isTurboActive && !isFastTurnActive)
+        {
+            speed = 25f;
+            isTurboActive = true;
+            if (speedCam != null) speedCam.Priority = 1;
+            ApplyTurboParticleEffects();
+        }
+        else if (!turbo.isPressed && isTurboActive)
+        {
+            speed = 10f;
+            isTurboActive = false;
+            if (speedCam != null) speedCam.Priority = -1;
+            ApplyNormalParticleEffects();
+        }
+    }
+
+    private void ApplyTurboParticleEffects()
+    {
+        if (engineParticleInstance != null)
+        {
+            var main = engineParticleInstance.main;
+            var emission = engineParticleInstance.emission;
+
+            main.startSpeed = turboStartSpeed;
+            main.startSize = turboStartSize;
+            main.startLifetime = turboStartLifetime; // USANDO VARIABLE PÚBLICA
+            emission.rateOverTime = turboEmissionRate;
+            main.startColor = new Color(1f, 0.6f, 0.2f, 1f);
+        }
+    }
+
+    private void ApplyNormalParticleEffects()
+    {
+        if (engineParticleInstance != null)
+        {
+            var main = engineParticleInstance.main;
+            var emission = engineParticleInstance.emission;
+
+            main.startSpeed = normalStartSpeed;
+            main.startSize = normalStartSize;
+            main.startLifetime = normalStartLifetime; // USANDO VARIABLE PÚBLICA
+            emission.rateOverTime = normalEmissionRate;
+            main.startColor = new Color(0.3f, 0.6f, 1f, 0.8f);
+        }
+    }
+
     private void OnAttack_0(InputValue attack)
     {
-        if (attack.isPressed && !isFiring)
+        if (attack.isPressed && !isFiring && !isDead)
         {
-            // Iniciar disparo solo si no estábamos disparando ya
             isFiring = true;
-            shootingSystem.StartFiring();
-            Debug.Log("Pium pium...");
+            if (shootingSystem != null)
+                shootingSystem.StartFiring();
             speed = 3f;
+            foreach (CinemachineBasicMultiChannelPerlin shake in cameraObj.GetComponentsInChildren<CinemachineBasicMultiChannelPerlin>())
+            {
+                shake.AmplitudeGain = screenShakeAmmount;
+                shake.FrequencyGain = screenShakeFrequency;
+            }
         }
         else if (!attack.isPressed && isFiring)
         {
-            // Detener disparo solo si estábamos disparando
             isFiring = false;
-            shootingSystem.StopFiring();
+            if (shootingSystem != null)
+                shootingSystem.StopFiring();
             speed = 10f;
-            Debug.Log("No Pium pium...");
+            foreach (CinemachineBasicMultiChannelPerlin shake in cameraObj.GetComponentsInChildren<CinemachineBasicMultiChannelPerlin>())
+            {
+                shake.AmplitudeGain = 0;
+                shake.FrequencyGain = 0;
+            }
         }
     }
 
-    //Disparo misil 
     private void OnAttack_1(InputValue attack1)
     {
-        if (attack1.isPressed)
+        if (attack1.isPressed && !isDead)
         {
-            shootingSystem.Misil();
-            Debug.Log("Misilazo");
+            if (shootingSystem != null)
+                shootingSystem.Misil();
         }
     }
 
@@ -127,15 +308,14 @@ public class PlayerControllerLocal : MonoBehaviour
     {
         foreach (Transform origin in raycastOrigins)
         {
-            // Lanzar raycast hacia adelante desde cada punto de origen
+            if (origin == null) continue;
+
             Ray ray = new Ray(origin.position, origin.forward);
             RaycastHit hit;
 
             if (Physics.Raycast(ray, out hit, raycastDistance, buildingLayerMask))
             {
                 Debug.DrawRay(origin.position, origin.forward * raycastDistance, Color.red);
-
-                // Si golpea un edificio, destruir el avi�n
                 DestroyAirplane();
                 return;
             }
@@ -151,26 +331,58 @@ public class PlayerControllerLocal : MonoBehaviour
         if (isDead) return;
 
         isDead = true;
-        
-        // Detener el disparo si estaba activo
-        if (isFiring)
+
+        if (engineParticleInstance != null)
+        {
+            engineParticleInstance.Stop();
+        }
+
+        if (isFiring && shootingSystem != null)
         {
             shootingSystem.StopFiring();
             isFiring = false;
         }
-        
-        //Efecto explosi�n al destruirse el avi�n
-        Instantiate(explosionEffect, transform.position, transform.rotation);
 
-        // Finds object by name and deactivates it
-        foreach(var child in GetComponentsInChildren<MeshRenderer>())
+        if (explosionEffect != null)
+            Instantiate(explosionEffect, transform.position, transform.rotation);
+
+        foreach (var child in GetComponentsInChildren<MeshRenderer>())
         {
             child.gameObject.SetActive(false);
         }
+
+        foreach (var collider in GetComponentsInChildren<Collider>())
+        {
+            collider.enabled = false;
+        }
+
         Invoke("RestartGame", 1f);
     }
+
     private void RestartGame()
     {
         SceneManager.LoadScene("LocalMultiScene");
+    }
+
+    public void DañoAla()
+    {
+        if (isDead) return;
+
+        vidas--;
+        if (vidas <= 0)
+        {
+            DestroyAirplane();
+        }
+    }
+
+    public void DañoCabina()
+    {
+        if (isDead) return;
+
+        vidas -= 2;
+        if (vidas <= 0)
+        {
+            DestroyAirplane();
+        }
     }
 }

@@ -7,6 +7,8 @@ TagManager:
   - Spawn
   - CameraSystem
   - Misil
+  - Alas
+  - Cabina
   layers:
   - Default
   - TransparentFX
@@ -16,11 +18,11 @@ TagManager:
   - UI
   - Buildings
   - Misil
-  - 
-  - 
-  - 
-  - 
-  - 
+  - Player
+  - 3DUI_P0
+  - 3DUI_P1
+  - Cross_P0
+  - Cross_P1
   - 
   - 
   - 

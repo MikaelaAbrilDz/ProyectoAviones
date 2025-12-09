@@ -1,12 +1,11 @@
 using UnityEngine;
-using Unity.Netcode;
 using System.Collections;
 
 public class ShootingSystemLocal : MonoBehaviour
 {
     [Header("Configuración Láser Metralleta")]
-    [SerializeField] private Transform firePoint; // Punto de origen del láser
-    [SerializeField] private float fireRate = 10f; // Disparos por segundo
+    [SerializeField] private Transform firePoint;
+    [SerializeField] private float fireRate = 10f;
     [SerializeField] private float laserRange = 100f;
     [SerializeField] private float laserDuration = 0.1f;
     [SerializeField] private float damage = 10f;
@@ -14,67 +13,73 @@ public class ShootingSystemLocal : MonoBehaviour
     [Header("Efectos Visuales")]
     [SerializeField] private LineRenderer laserLine;
     [SerializeField] private ParticleSystem muzzleFlash;
-    //[SerializeField] private GameObject hitEffect;
+    [SerializeField] private ParticleSystem bulletTrailParticle;
+    [SerializeField] private ParticleSystem impactParticle;
 
     [Header("Misil")]
     [SerializeField] private GameObject misil;
     [SerializeField] private Transform misilPoint;
-    [SerializeField] private float misilSpeed = 20f; // Velocidad del misil
-    [SerializeField] private int misilAmmount = 3; //3
-
-    //[Header("Audio")]
-    //[SerializeField] private AudioClip laserSound;
-    //[SerializeField] private AudioClip hitSound;
+    [SerializeField] private float misilSpeed = 20f;
+    [SerializeField] private int misilAmmount = 3;
 
     [Header("Configuración de Layers")]
-    [SerializeField] private LayerMask hitLayers = ~0; // Todos los layers por defecto
+    [SerializeField] private LayerMask hitLayers = ~0;
 
     private AudioSource audioSource;
     private bool isFiring = false;
     private float fireDelay;
-    private PlayerControllerOnline playerController;
+    private PlayerControllerLocal playerController;
 
     private void Start()
     {
-        // Obtener referencia al PlayerController
-        playerController = GetComponent<PlayerControllerOnline>();
+        playerController = GetComponent<PlayerControllerLocal>();
 
-        // Configurar AudioSource
+        if (playerController == null)
+        {
+            Debug.LogError("No se encontró PlayerControllerLocal en el objeto");
+        }
+
         audioSource = GetComponent<AudioSource>();
         if (audioSource == null)
         {
             audioSource = gameObject.AddComponent<AudioSource>();
         }
 
-        // Calcular delay entre disparos
         fireDelay = 1f / fireRate;
 
-        // Configurar LineRenderer si existe
         if (laserLine != null)
         {
             laserLine.positionCount = 2;
             laserLine.enabled = false;
         }
 
-        // Verificar que tenemos el firePoint asignado
         if (firePoint == null)
         {
-            Debug.LogError("FirePoint no asignado en MachineGunLaser!");
+            Debug.LogError("FirePoint no asignado en ShootingSystemLocal!");
         }
-    }
 
-    private void Update()
-    {
-
+        // DEBUG: Verificar si el muzzle flash está asignado
+        if (muzzleFlash == null)
+        {
+            Debug.LogError("MUZZLE FLASH NO ASIGNADO en el Inspector!");
+        }
+        else
+        {
+            Debug.Log($"Muzzle Flash asignado: {muzzleFlash.name}, Estado: {muzzleFlash.gameObject.activeInHierarchy}");
+        }
     }
 
     public void StartFiring()
     {
-        if (!isFiring)
+        if (!isFiring && playerController != null && playerController.Vidas > 0)
         {
             isFiring = true;
             StartCoroutine(FiringCoroutine());
-            Debug.Log("disparando");
+
+            // DEBUG
+            Debug.Log("StartFiring llamado");
+
+            Debug.Log("Disparando");
         }
     }
 
@@ -83,22 +88,21 @@ public class ShootingSystemLocal : MonoBehaviour
         isFiring = false;
         StopAllCoroutines();
 
-        // Ocultar láser inmediatamente al dejar de disparar
         if (laserLine != null)
         {
             laserLine.enabled = false;
         }
 
-        // Detener el muzzle flash
+        // Detener partículas
         if (muzzleFlash != null)
         {
-            muzzleFlash.Stop();
+            Debug.Log("Deteniendo muzzle flash");
         }
     }
 
     private IEnumerator FiringCoroutine()
     {
-        while (isFiring)
+        while (isFiring && playerController != null && playerController.Vidas > 0)
         {
             ShootLaser();
             yield return new WaitForSeconds(fireDelay);
@@ -107,9 +111,10 @@ public class ShootingSystemLocal : MonoBehaviour
 
     private void ShootLaser()
     {
+        if (firePoint == null) return;
+
         PlayMuzzleFlash();
 
-        // Resto del código del láser...
         RaycastHit hit;
         Vector3 startPos = firePoint.position;
         Vector3 endPos;
@@ -120,11 +125,17 @@ public class ShootingSystemLocal : MonoBehaviour
         {
             endPos = hit.point;
             ProcessHit(hit);
+
+            // Mostrar partícula de impacto
+            ShowImpactParticle(hit.point, hit.normal);
         }
         else
         {
             endPos = startPos + firePoint.forward * laserRange;
         }
+
+        // Mostrar partícula de trayecto
+        ShowBulletTrail(startPos, endPos);
 
         StartCoroutine(ShowLaserBriefly(startPos, endPos));
     }
@@ -133,26 +144,58 @@ public class ShootingSystemLocal : MonoBehaviour
     {
         if (muzzleFlash == null)
         {
-            Debug.LogError("MuzzleFlash no asignado!");
+            Debug.LogError("Muzzle Flash es NULL en PlayMuzzleFlash!");
             return;
         }
 
-        // Asegurar que el GameObject esté activo
-        if (!muzzleFlash.gameObject.activeInHierarchy)
-            muzzleFlash.gameObject.SetActive(true);
+        Debug.Log($"Ejecutando PlayMuzzleFlash. MuzzleFlash activo: {muzzleFlash.gameObject.activeInHierarchy}");
 
-        // SOLUCIÓN: Usar Simulate y Play juntos
-        muzzleFlash.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-        muzzleFlash.Simulate(0, true, true); // Resetear al inicio
-        muzzleFlash.Play(true); // Forzar play incluyendo hijos
+        // SOLUCIÓN OPCIÓN 1: Instanciar el prefab
+        ParticleSystem muzzleInstance = Instantiate(muzzleFlash, firePoint.position, firePoint.rotation);
+        muzzleInstance.transform.parent = firePoint; // Hacerlo hijo del firePoint
 
-        Debug.Log($"MuzzleFlash playing: {muzzleFlash.isPlaying}");
-        Debug.Log($"Particle count: {muzzleFlash.particleCount}");
+        // Configurar y reproducir
+        muzzleInstance.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        muzzleInstance.Clear();
+        muzzleInstance.Play(true);
+
+        Debug.Log("Muzzle flash instanciado y reproducido");
+
+        // Destruir después de que termine
+        Destroy(muzzleInstance.gameObject, muzzleInstance.main.duration + 0.1f);
+    }
+
+    // Método para mostrar partícula de trayecto
+    private void ShowBulletTrail(Vector3 startPos, Vector3 endPos)
+    {
+        if (bulletTrailParticle != null)
+        {
+            Vector3 direction = (endPos - startPos).normalized;
+            float distance = Vector3.Distance(startPos, endPos);
+
+            ParticleSystem trailInstance = Instantiate(bulletTrailParticle, startPos, Quaternion.LookRotation(direction));
+
+            var mainModule = trailInstance.main;
+            mainModule.startLifetime = distance / mainModule.startSpeed.constant;
+
+            trailInstance.Play();
+            Destroy(trailInstance.gameObject, mainModule.startLifetime.constant + 1f);
+        }
+    }
+
+    // Método para mostrar partícula de impacto
+    private void ShowImpactParticle(Vector3 impactPoint, Vector3 impactNormal)
+    {
+        if (impactParticle != null)
+        {
+            ParticleSystem impactInstance = Instantiate(impactParticle, impactPoint, Quaternion.LookRotation(impactNormal));
+            impactInstance.Play();
+            Destroy(impactInstance.gameObject, impactInstance.main.duration + 1f);
+        }
     }
 
     private IEnumerator ShowLaserBriefly(Vector3 startPos, Vector3 endPos)
     {
-        // Mostrar el láser por un breve momento
         if (laserLine != null)
         {
             laserLine.SetPosition(0, startPos);
@@ -167,55 +210,50 @@ public class ShootingSystemLocal : MonoBehaviour
 
     private void ProcessHit(RaycastHit hit)
     {
-        // Aquí puedes agregar lógica de daño
-        Debug.Log($"Láser impactó: {hit.collider.name}");
+        Debug.Log($"Láser impactó: {hit.collider.name} - Tag: {hit.collider.tag}");
 
-        // Ejemplo: aplicar daño a objetos con salud
-        /* 
-        HealthSystem health = hit.collider.GetComponent<HealthSystem>();
-        if (health != null)
+        PlayerControllerLocal targetPlayer = hit.collider.GetComponent<PlayerControllerLocal>();
+        if (targetPlayer == null)
         {
-            health.TakeDamage(damage);
+            targetPlayer = hit.collider.GetComponentInParent<PlayerControllerLocal>();
         }
-        */
 
-        // Si es otro avión
-        if (hit.collider.CompareTag("Player"))
+        if (targetPlayer != null && targetPlayer != this.playerController)
         {
-            // Lógica para dañar otros jugadores
-            Debug.Log("¡Avión enemigo impactado!");
-            hit.collider.gameObject.GetComponent<PlayerControllerLocal>().DestroyAirplane();
+            if (hit.collider.CompareTag("Alas"))
+            {
+                Debug.Log("¡Impacto en ala enemiga -1!");
+                targetPlayer.DañoAla();
+            }
+            else if (hit.collider.CompareTag("Cabina"))
+            {
+                Debug.Log("¡Impacto en cabina enemiga-2!");
+                targetPlayer.DañoCabina();
+            }
+        }
+        else
+        {
+            Debug.Log($"Objeto impactado no es un jugador enemigo o es el mismo jugador");
         }
     }
 
     public void Misil()
     {
-        // Lógica para disparar un misil
-        if (misilAmmount > 0)
+        if (misilAmmount > 0 && playerController != null && playerController.Vidas > 0)
         {
-            // Instanciar el misil
-            GameObject misilInstanciado = Instantiate(misil, misilPoint.position, transform.rotation);
+            if (misil == null || misilPoint == null)
+            {
+                Debug.LogError("Misil o misilPoint no asignado!");
+                return;
+            }
 
-            // Obtener el Rigidbody del misil y aplicar velocidad
+            GameObject misilInstanciado = Instantiate(misil, misilPoint.position, transform.rotation);
             Rigidbody misilRb = misilInstanciado.GetComponent<Rigidbody>();
+
             if (misilRb != null)
             {
                 misilRb.linearVelocity = misilPoint.forward * misilSpeed;
-
-                // Desactivar la gravedad para que no caiga
                 misilRb.useGravity = false;
-            }
-            else
-            {
-                Debug.LogWarning("El misil no tiene componente Rigidbody");
-            }
-
-            // Configurar el misil para que detecte colisiones con edificios
-            MisilController misilController = misilInstanciado.GetComponent<MisilController>();
-            if (misilController == null)
-            {
-                
-                misilController = misilInstanciado.AddComponent<MisilController>();
             }
 
             misilAmmount--;
@@ -223,11 +261,10 @@ public class ShootingSystemLocal : MonoBehaviour
         }
         else
         {
-            Debug.Log("No hay misiles disponibles");
+            Debug.Log("No hay misiles disponibles o jugador está muerto");
         }
     }
 
-    // Método para cambiar la configuración del láser en tiempo de ejecución
     public void SetLaserConfig(float newFireRate, float newRange, float newDamage)
     {
         fireRate = newFireRate;
@@ -236,12 +273,39 @@ public class ShootingSystemLocal : MonoBehaviour
         damage = newDamage;
     }
 
+    // NUEVO: Método para probar el muzzle flash manualmente
+    [ContextMenu("Probar Muzzle Flash")]
+    public void ProbarMuzzleFlash()
+    {
+        Debug.Log("=== PRUEBA MANUAL MUZZLE FLASH ===");
+
+        if (muzzleFlash == null)
+        {
+            Debug.LogError("Muzzle Flash no asignado!");
+            return;
+        }
+
+        Debug.Log($"Muzzle Flash: {muzzleFlash.name}");
+        Debug.Log($"Transform posición: {muzzleFlash.transform.position}");
+        Debug.Log($"Transform padre: {muzzleFlash.transform.parent}");
+
+        PlayMuzzleFlash();
+    }
+
+    private void Update()
+    {
+        // DEBUG: Probar con tecla (opcional)
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            ProbarMuzzleFlash();
+        }
+    }
+
     private void OnDestroy()
     {
         StopAllCoroutines();
     }
 
-    // Debug visual en el editor
     private void OnDrawGizmosSelected()
     {
         if (firePoint != null)
