@@ -1,5 +1,6 @@
 using UnityEngine;
 using Unity.Netcode;
+using Unity.Netcode.Components;
 
 public class MisilControllerOnline : NetworkBehaviour
 {
@@ -7,11 +8,13 @@ public class MisilControllerOnline : NetworkBehaviour
     [SerializeField] private float explosionForce = 10f;
     [SerializeField] private float explosionRadius = 5f;
     [SerializeField] private GameObject explosionEffect;
-    [SerializeField] private float misilSpeed = 50f;
+    private float misilSpeed = 150f;
     public GameObject shooter;
 
     private void Start()
     {
+        shooter = Physics.OverlapSphere(transform.position, 2, playerLayer)[0].transform.parent.gameObject;
+
         // Destruir el misil después de un tiempo por si no colisiona
         Invoke(nameof(DestroyMissile), 10f);
     }
@@ -39,7 +42,7 @@ public class MisilControllerOnline : NetworkBehaviour
         Debug.Log($"Misil impactó con edificio: {buildingCollider.name}");
 
         // Destruir el edificio
-        buildingCollider.gameObject.SetActive(false);
+        buildingCollider.GetComponent<BuildingManager>().Collapse();
 
         // Efecto de explosión
         SpawnExplosionEffect(hitPoint);

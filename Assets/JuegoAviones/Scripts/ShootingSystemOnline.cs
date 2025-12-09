@@ -196,21 +196,27 @@ public class ShootingSystemOnline : NetworkBehaviour
         {
             _misilAmmount--;
 
-            if (IsServer)
+            if (!IsServer)
             {
-                ShootMisilClientRpc();
+                ShootMisilRpc();
                 return;
             }
 
-            ShootMisilServerRpc();
+            GameObject misilInstanciado = Instantiate(misil, misilPoint.position, transform.rotation);
+            misilInstanciado.GetComponent<NetworkObject>().Spawn();
+            // Configurar el misil
+            MisilControllerOnline misilController = misilInstanciado.GetComponent<MisilControllerOnline>();
+            if (misilController != null)
+            {
+                // Puedes configurar parámetros específicos aquí si es necesario
+            }
 
         }
     }
-
-    [ClientRpc(RequireOwnership = false)]
-    private void ShootMisilClientRpc()
+    [Rpc(SendTo.Server, RequireOwnership = false)]
+    private void ShootMisilRpc()
     {
-        GameObject misilInstanciado = Instantiate(misil, misilPoint.position, transform.rotation);
+        GameObject misilInstanciado = Instantiate(misil, misilPoint.position, misilPoint.rotation);
         misilInstanciado.GetComponent<NetworkObject>().Spawn();
         misilInstanciado.GetComponent<MisilControllerOnline>().shooter = gameObject;
         // Configurar el misil
@@ -219,12 +225,6 @@ public class ShootingSystemOnline : NetworkBehaviour
         {
             // Puedes configurar parámetros específicos aquí si es necesario
         }
-
-    }
-    [ServerRpc(RequireOwnership = false)]
-    private void ShootMisilServerRpc()
-    {
-        ShootMisilClientRpc();
     }
 
     public void SetLaserConfig(float newFireRate, float newRange, float newDamage)

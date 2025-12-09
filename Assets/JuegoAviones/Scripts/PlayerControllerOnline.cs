@@ -16,6 +16,7 @@ public class PlayerControllerOnline : NetworkBehaviour
     [SerializeField] GameObject cameraPrefab;
     [SerializeField] GameObject cross;
     [SerializeField] GameObject visual;
+    [SerializeField] GameObject enviro;
     GameObject cameraObj;
     Transform pointer;
     Transform otherPlayer;
@@ -70,7 +71,7 @@ public class PlayerControllerOnline : NetworkBehaviour
     bool isFastTurnActive = false;
 
     private ParticleSystem engineParticleInstance;
-
+    GameObject enviroInstanced;
     public int life
     {
         get
@@ -90,6 +91,13 @@ public class PlayerControllerOnline : NetworkBehaviour
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
+
+        if (IsServer && IsOwner && enviroInstanced == null)
+        {
+            enviroInstanced = Instantiate(enviro, Vector3.zero, Quaternion.identity);
+            enviroInstanced.transform.localScale = Vector3.one * 0.1f;
+            enviroInstanced.GetComponent<NetworkObject>().Spawn(); 
+        } 
 
         life = maxLife;
         shootingSystem = GetComponent<ShootingSystemOnline>();
