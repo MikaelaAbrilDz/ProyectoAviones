@@ -184,7 +184,7 @@ public class ShootingSystemOnline : NetworkBehaviour
         }
     }
 
-    public void Misil()
+    public void ShootMisil()
     {
         if (misilAmmount > 0 && playerController != null && playerController.life > 0)
         {
@@ -194,50 +194,39 @@ public class ShootingSystemOnline : NetworkBehaviour
                 return;
             }
 
-            // Solo el dueño puede disparar misiles
-            if (IsOwner)
+
+            if (IsServer)
             {
-                ShootMisilServerRpc();
+                ShootMisilClientRpc();
+                return;
             }
+
+            GameObject misilInstanciado = Instantiate(misil, misilPoint.position, transform.rotation);
+            misilInstanciado.GetComponent<MisilControllerOnline>().shooter = gameObject;
+            // Configurar el misil
+            MisilControllerOnline misilController = misilInstanciado.GetComponent<MisilControllerOnline>();
+            if (misilController != null)
+            {
+                // Puedes configurar parámetros específicos aquí si es necesario
+            }
+
+            misilAmmount--;
         }
     }
 
-    [ServerRpc]
-    private void ShootMisilServerRpc()
+    [ClientRpc(RequireOwnership = false)]
+    private void ShootMisilClientRpc()
     {
         GameObject misilInstanciado = Instantiate(misil, misilPoint.position, transform.rotation);
-
+        misilInstanciado.GetComponent<MisilControllerOnline>().shooter = gameObject;
         // Configurar el misil
-        MisilController misilController = misilInstanciado.GetComponent<MisilController>();
+        MisilControllerOnline misilController = misilInstanciado.GetComponent<MisilControllerOnline>();
         if (misilController != null)
         {
             // Puedes configurar parámetros específicos aquí si es necesario
         }
 
-        Rigidbody misilRb = misilInstanciado.GetComponent<Rigidbody>();
-        if (misilRb != null)
-        {
-            misilRb.linearVelocity = misilPoint.forward * misilSpeed;
-            misilRb.useGravity = false;
-        }
-
-        // Replicar el misil en la red
-        NetworkObject networkObject = misilInstanciado.GetComponent<NetworkObject>();
-        if (networkObject != null)
-        {
-            networkObject.Spawn();
-        }
-
         misilAmmount--;
-
-        // Replicar la reducción de munición a los clientes
-        UpdateMisilAmmountClientRpc(misilAmmount);
-    }
-
-    [ClientRpc]
-    private void UpdateMisilAmmountClientRpc(int newAmmount)
-    {
-        misilAmmount = newAmmount;
     }
 
     public void SetLaserConfig(float newFireRate, float newRange, float newDamage)

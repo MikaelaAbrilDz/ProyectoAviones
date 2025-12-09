@@ -248,13 +248,7 @@ public class ShootingSystemLocal : MonoBehaviour
             }
 
             GameObject misilInstanciado = Instantiate(misil, misilPoint.position, transform.rotation);
-            Rigidbody misilRb = misilInstanciado.GetComponent<Rigidbody>();
-
-            if (misilRb != null)
-            {
-                misilRb.linearVelocity = misilPoint.forward * misilSpeed;
-                misilRb.useGravity = false;
-            }
+            misilInstanciado.GetComponent<MisilControllerLocal>().shooter = gameObject;
 
             misilAmmount--;
             Debug.Log($"Misil disparado. Misiles restantes: {misilAmmount}");

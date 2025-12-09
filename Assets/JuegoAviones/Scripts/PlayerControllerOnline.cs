@@ -15,6 +15,7 @@ public class PlayerControllerOnline : NetworkBehaviour
     [SerializeField] Transform camFollowed;
     [SerializeField] GameObject cameraPrefab;
     [SerializeField] GameObject cross;
+    [SerializeField] GameObject visual;
     GameObject cameraObj;
     Transform pointer;
     Transform otherPlayer;
@@ -23,6 +24,7 @@ public class PlayerControllerOnline : NetworkBehaviour
 
     [Header("Vidas")]
     public NetworkVariable<int> networkLifes = new NetworkVariable<int>(15);
+    public int maxLife = 15;
 
     [Header("Screen Shake - Disparo")]
     [SerializeField] float screenShakeAmmount = 0.5f;
@@ -62,7 +64,7 @@ public class PlayerControllerOnline : NetworkBehaviour
     float speed = 10f;
     int maxInclination = 50;
     float inclinationSpeed = 100f;
-    bool isDead = false;
+    [HideInInspector] public bool isDead = false;
     bool isFiring = false;
     bool isTurboActive = false;
     bool isFastTurnActive = false;
@@ -88,6 +90,8 @@ public class PlayerControllerOnline : NetworkBehaviour
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
+
+        life = maxLife;
         shootingSystem = GetComponent<ShootingSystemOnline>();
 
         if (raycastOrigins == null || raycastOrigins.Length == 0)
@@ -107,7 +111,7 @@ public class PlayerControllerOnline : NetworkBehaviour
 
         // Solo el owner inicializa la cámara y busca otros jugadores
         InitializeCamera();
-        FindOtherPlayers();
+        FindOtherPlayer();
     }
 
     private void InitializeCamera()
@@ -215,15 +219,16 @@ public class PlayerControllerOnline : NetworkBehaviour
         engineParticleInstance.transform.localRotation = Quaternion.Euler(0, 180f, 0);
     }
 
-    private void FindOtherPlayers()
+    public void FindOtherPlayer()
     {
         if (otherPlayer == null)
         {
-            foreach (var player in FindObjectsByType<PlayerControllerOnline>(FindObjectsSortMode.None))
+            foreach (var player in FindObjectsByType<PlayerControllerOnline>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
-                if (player != this && player.IsSpawned)
+                if (player != this)
                 {
                     otherPlayer = player.transform;
+                    otherPlayer.GetComponent<PlayerControllerOnline>().FindOtherPlayer();
                     break;
                 }
             }
@@ -423,7 +428,7 @@ public class PlayerControllerOnline : NetworkBehaviour
         if (attack1.isPressed)
         {
             if (shootingSystem != null)
-                shootingSystem.Misil();
+                shootingSystem.ShootMisil();
         }
     }
 
@@ -451,12 +456,13 @@ public class PlayerControllerOnline : NetworkBehaviour
 
     public void DestroyAirplane()
     {
-        isDead = true;
         if (IsServer)
         {
             DestroyAirplaneClientRpc();
             return;
         }
+
+        isDead = true;
 
         if (engineParticleInstance != null)
         {
@@ -475,15 +481,15 @@ public class PlayerControllerOnline : NetworkBehaviour
         if (explosionEffect != null)
             Instantiate(explosionEffect, transform.position, transform.rotation);
 
-        foreach (var child in GetComponentsInChildren<MeshRenderer>())
-        {
-            child.gameObject.SetActive(false);
-        }
+
+        visual.SetActive(false);
 
         foreach (var collider in GetComponentsInChildren<Collider>())
         {
             collider.enabled = false;
         }
+
+        Invoke("AskForRestart", 1f);
     }
 
     [ClientRpc(RequireOwnership = false)]
@@ -508,61 +514,75 @@ public class PlayerControllerOnline : NetworkBehaviour
         if (explosionEffect != null)
             Instantiate(explosionEffect, transform.position, transform.rotation);
 
-        foreach (var child in GetComponentsInChildren<MeshRenderer>())
-        {
-            child.gameObject.SetActive(false);
-        }
+        visual.SetActive(false);
 
         foreach (var collider in GetComponentsInChildren<Collider>())
         {
             collider.enabled = false;
         }
+
+        Invoke("AskForRestart", 1f);
     }
 
-    private void RespawnPlayer()
+    private void AskForRestart()
+    {
+        if (IsServer) FindAnyObjectByType<RestartGameCounter>()._restartCounter = 0;
+        FindAnyObjectByType<OnlineResetUI>(FindObjectsInactive.Include).gameObject.SetActive(true);
+        FindAnyObjectByType<OnlineResetUI>(FindObjectsInactive.Include).button.SetActive(true);
+        Time.timeScale = 0;
+    }
+    public void RestartGame()
     {
         if (IsServer)
         {
-            // Reactivar el avión
-            isDead = false;
-            networkLifes.Value = 3;
-
-            foreach (var child in GetComponentsInChildren<MeshRenderer>())
-            {
-                child.gameObject.SetActive(true);
-            }
-
-            foreach (var collider in GetComponentsInChildren<Collider>())
-            {
-                collider.enabled = true;
-            }
-
-            if (engineParticleInstance != null)
-            {
-                engineParticleInstance.Play();
-            }
-
-            // Resetear humo
-            UpdateSmokeBasedOnHealth();
-
-            // Buscar spawn point disponible
-            GameObject[] spawns = GameObject.FindGameObjectsWithTag("Spawn");
-            foreach (var spawn in spawns)
-            {
-                if (spawn.activeSelf)
-                {
-                    transform.position = spawn.transform.position;
-                    spawn.SetActive(false);
-                    break;
-                }
-            }
+            GetComponent<SpawnManager>().ResetSpawns();
+            RestartGameClientRpc();
         }
-        Invoke("RestartGame", 1f);
+
+        AddCounterServerRpc();
     }
 
-    private void RestartGame()
+    [ServerRpc(RequireOwnership = false)]
+    private void AddCounterServerRpc()
     {
-        SceneManager.LoadScene("OnlineMultiScene");
+        FindAnyObjectByType<RestartGameCounter>()._restartCounter ++;
+    }
+
+    [ClientRpc(RequireOwnership = false)]
+    private void RestartGameClientRpc()
+    {
+
+        if (IsServer) GetComponent<SpawnManager>().RespawnPlayer();
+        isTurboActive = false;
+        if (IsServer)
+        {
+            life = maxLife;
+        }
+        engineParticleInstance.Play();
+        isDead = false;
+        visual.SetActive(true);
+        foreach (var collider in GetComponentsInChildren<Collider>())
+        {
+            collider.enabled = true;
+        }
+
+        FindOtherPlayer();
+
+        PlayerControllerOnline otherPlayerScript = otherPlayer.GetComponent<PlayerControllerOnline>();
+        if (IsServer) otherPlayerScript.GetComponent<SpawnManager>().RespawnPlayer();
+        otherPlayerScript.isTurboActive = false;
+        if (IsServer)
+        {
+            otherPlayerScript.life = otherPlayerScript.maxLife;
+        }
+        otherPlayerScript.engineParticleInstance.Play();
+        otherPlayerScript.isDead = false;
+        otherPlayerScript.visual.SetActive(true);
+        foreach (var collider in otherPlayerScript.GetComponentsInChildren<Collider>())
+        {
+            collider.enabled = true;
+        }
+
     }
 
     public void TakeDamage(int damage)
@@ -602,8 +622,8 @@ public class PlayerControllerOnline : NetworkBehaviour
     {
         if (isDead || smokeInstances == null) return;
 
-        // Calcular cuántas vidas faltan (asumiendo 3 vidas máximas)
-        int vidasFaltantes = 3 - networkLifes.Value;
+        // Calcular cuántas vidas faltan
+        int vidasFaltantes = maxLife - networkLifes.Value;
 
         Debug.Log($"Actualizando humo online. Vidas: {networkLifes.Value}, Faltantes: {vidasFaltantes}");
 
