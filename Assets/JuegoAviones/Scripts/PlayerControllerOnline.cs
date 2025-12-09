@@ -466,7 +466,7 @@ public class PlayerControllerOnline : NetworkBehaviour
 
         if (engineParticleInstance != null)
         {
-            engineParticleInstance.Stop();
+            engineParticleInstance.Pause();
         }
 
         // Detener todos los humos al morir
@@ -499,7 +499,7 @@ public class PlayerControllerOnline : NetworkBehaviour
 
         if (engineParticleInstance != null)
         {
-            engineParticleInstance.Stop();
+            engineParticleInstance.Pause();
         }
 
         // Detener todos los humos al morir
@@ -558,7 +558,7 @@ public class PlayerControllerOnline : NetworkBehaviour
         {
             life = maxLife;
         }
-        engineParticleInstance.Play();
+        if (engineParticleInstance != null) engineParticleInstance.Play();
         isDead = false;
         visual.SetActive(true);
         foreach (var collider in GetComponentsInChildren<Collider>())
@@ -575,7 +575,7 @@ public class PlayerControllerOnline : NetworkBehaviour
         {
             otherPlayerScript.life = otherPlayerScript.maxLife;
         }
-        otherPlayerScript.engineParticleInstance.Play();
+        if (otherPlayerScript.engineParticleInstance != null) engineParticleInstance.Play(); otherPlayerScript.engineParticleInstance.Play();
         otherPlayerScript.isDead = false;
         otherPlayerScript.visual.SetActive(true);
         foreach (var collider in otherPlayerScript.GetComponentsInChildren<Collider>())
