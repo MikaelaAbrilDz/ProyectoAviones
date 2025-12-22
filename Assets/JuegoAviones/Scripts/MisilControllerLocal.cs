@@ -39,7 +39,7 @@ public class MisilControllerLocal : MonoBehaviour
         Debug.Log($"Misil impactó con edificio: {buildingCollider.name}");
 
         // Destruir el edificio
-        buildingCollider.gameObject.SetActive(false);
+        buildingCollider.GetComponent<BuildingManagerLocal>().Collapse();
 
         // Efecto de explosión
         SpawnExplosionEffect(hitPoint);
