@@ -1,10 +1,11 @@
+using System;
 using System.Globalization;
 using Unity.Cinemachine;
 using Unity.Netcode;
-using UnityEngine.InputSystem;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
-using System;
+using static UnityEngine.Rendering.DebugUI;
 
 public class PlayerControllerOnline : NetworkBehaviour
 {
@@ -51,12 +52,8 @@ public class PlayerControllerOnline : NetworkBehaviour
     [SerializeField] private float fastTurnSpeedMultiplier = 0.3f;
     [SerializeField] private float fastTurnRotationMultiplier = 3f;
 
-    [Header("SISTEMA DE HUMO - Configuración")]
-    [SerializeField] private GameObject smokePrefab; // Cambiado a GameObject para más flexibilidad
-    [SerializeField] private Transform[] smokePositions; // Donde quieres que salga el humo
-
     // Variables internas del humo
-    private GameObject[] smokeInstances;
+    public GameObject[] smokeParticles;
 
     ShootingSystemOnline shootingSystem;
 
@@ -84,8 +81,18 @@ public class PlayerControllerOnline : NetworkBehaviour
             {
                 DestroyAirplaneClientRpc();
             }
-            networkLifes.Value = value;
+
+            if (!IsServer) UpdateLifeRpc(value);
+            else networkLifes.Value = value;
+
+            UpdateSmokeBasedOnHealthRpc();
         }
+    }
+
+    [Rpc(SendTo.Server, RequireOwnership = false)]
+    private void UpdateLifeRpc(int value)
+    {
+        networkLifes.Value = value; //ASIGNA EL VALOR
     }
 
     public override void OnNetworkSpawn()
@@ -108,7 +115,6 @@ public class PlayerControllerOnline : NetworkBehaviour
         }
 
         InitializeEngineParticles();
-        InitializeSmokeSystem();
 
         if (!IsOwner)
         {
@@ -161,45 +167,6 @@ public class PlayerControllerOnline : NetworkBehaviour
 
         ConfigureEngineParticles();
         engineParticleInstance.Play();
-    }
-
-    private void InitializeSmokeSystem()
-    {
-        if (smokePrefab == null)
-        {
-            Debug.LogError("¡SmokePrefab no está asignado en el Inspector!");
-            return;
-        }
-
-        if (smokePositions == null || smokePositions.Length == 0)
-        {
-            Debug.LogError("¡No hay SmokePositions asignadas en el Inspector!");
-            return;
-        }
-
-        // Crear array para almacenar las instancias de humo
-        smokeInstances = new GameObject[smokePositions.Length];
-
-        // Instanciar todos los humos pero desactivarlos inicialmente
-        for (int i = 0; i < smokePositions.Length; i++)
-        {
-            if (smokePositions[i] != null)
-            {
-                smokeInstances[i] = Instantiate(smokePrefab, smokePositions[i].position, smokePositions[i].rotation);
-                smokeInstances[i].transform.SetParent(smokePositions[i]);
-                smokeInstances[i].transform.localPosition = Vector3.zero;
-                smokeInstances[i].transform.localRotation = Quaternion.identity;
-
-                // Desactivar inicialmente
-                smokeInstances[i].SetActive(false);
-
-                Debug.Log($"Humo {i} instanciado en posición: {smokePositions[i].name}");
-            }
-            else
-            {
-                Debug.LogError($"SmokePosition[{i}] no está asignado!");
-            }
-        }
     }
 
     private void ConfigureEngineParticles()
@@ -605,9 +572,6 @@ public class PlayerControllerOnline : NetworkBehaviour
         }
 
         life -= damage;
-
-        // Actualizar humo cuando se recibe daño (solo en el servidor)
-        UpdateSmokeBasedOnHealth();
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -616,64 +580,27 @@ public class PlayerControllerOnline : NetworkBehaviour
         if (isDead) return;
 
         life -= damage;
-
-        // Actualizar humo cuando se recibe daño
-        UpdateSmokeBasedOnHealthClientRpc();
     }
 
-    [ClientRpc]
-    void UpdateSmokeBasedOnHealthClientRpc()
+    [Rpc(SendTo.ClientsAndHost, RequireOwnership = false)]
+    void UpdateSmokeBasedOnHealthRpc()
     {
-        UpdateSmokeBasedOnHealth();
-    }
+        if (smokeParticles == null) return;
 
-    // Método para actualizar el humo según las vidas
-    private void UpdateSmokeBasedOnHealth()
-    {
-        if (isDead || smokeInstances == null) return;
-
-        // Calcular cuántas vidas faltan
-        int vidasFaltantes = maxLife - networkLifes.Value;
-
-        Debug.Log($"Actualizando humo online. Vidas: {networkLifes.Value}, Faltantes: {vidasFaltantes}");
-
-        // Activar/desactivar humos según vidas faltantes
-        for (int i = 0; i < smokeInstances.Length; i++)
-        {
-            if (smokeInstances[i] != null)
-            {
-                if (i < vidasFaltantes)
-                {
-                    // Activar este humo si le faltan suficientes vidas
-                    if (!smokeInstances[i].activeSelf)
-                    {
-                        smokeInstances[i].SetActive(true);
-                        Debug.Log($"Activando humo online {i}");
-                    }
-                }
-                else
-                {
-                    // Desactivar este humo si ya no le faltan tantas vidas
-                    if (smokeInstances[i].activeSelf)
-                    {
-                        smokeInstances[i].SetActive(false);
-                        Debug.Log($"Desactivando humo online {i}");
-                    }
-                }
-            }
-        }
+        if (life <= 10) smokeParticles[0].SetActive(true);
+        if (life <= 5) smokeParticles[1].SetActive(true);
     }
 
     // Método para detener todos los humos
     private void StopAllSmoke()
     {
-        if (smokeInstances == null) return;
+        if (smokeParticles == null) return;
 
-        for (int i = 0; i < smokeInstances.Length; i++)
+        for (int i = 0; i < smokeParticles.Length; i++)
         {
-            if (smokeInstances[i] != null && smokeInstances[i].activeSelf)
+            if (smokeParticles[i] != null && smokeParticles[i].activeSelf)
             {
-                smokeInstances[i].SetActive(false);
+                smokeParticles[i].SetActive(false);
             }
         }
     }
@@ -691,15 +618,13 @@ public class PlayerControllerOnline : NetworkBehaviour
         life--;
         Debug.Log($"Daño al ala! Vidas restantes: {life}");
 
-        // Actualizar humo
-        UpdateSmokeBasedOnHealth();
     }
 
     [ServerRpc(RequireOwnership = false)]
     void DañoAlaServerRpc()
     {
         life--;
-        UpdateSmokeBasedOnHealthClientRpc();
+        UpdateSmokeBasedOnHealthRpc();
     }
 
     public void DañoCabina()
@@ -714,16 +639,13 @@ public class PlayerControllerOnline : NetworkBehaviour
 
         life -= 2;
         Debug.Log($"Daño a la cabina! Vidas restantes: {life}");
-
-        // Actualizar humo
-        UpdateSmokeBasedOnHealth();
     }
 
     [ServerRpc(RequireOwnership = false)]
     void DañoCabinaServerRpc()
     {
         life -= 2;
-        UpdateSmokeBasedOnHealthClientRpc();
+        UpdateSmokeBasedOnHealthRpc();
     }
 
     // MÉTODOS DE DEBUG - Puedes llamarlos desde el Inspector
@@ -733,7 +655,7 @@ public class PlayerControllerOnline : NetworkBehaviour
         if (IsServer)
         {
             networkLifes.Value = 2;
-            UpdateSmokeBasedOnHealthClientRpc();
+            UpdateSmokeBasedOnHealthRpc();
         }
     }
 
@@ -743,7 +665,7 @@ public class PlayerControllerOnline : NetworkBehaviour
         if (IsServer)
         {
             networkLifes.Value = 1;
-            UpdateSmokeBasedOnHealthClientRpc();
+            UpdateSmokeBasedOnHealthRpc();
         }
     }
 
@@ -753,7 +675,7 @@ public class PlayerControllerOnline : NetworkBehaviour
         if (IsServer)
         {
             networkLifes.Value = 0;
-            UpdateSmokeBasedOnHealthClientRpc();
+            UpdateSmokeBasedOnHealthRpc();
         }
     }
 
@@ -763,7 +685,7 @@ public class PlayerControllerOnline : NetworkBehaviour
         if (IsServer)
         {
             networkLifes.Value = 3;
-            UpdateSmokeBasedOnHealthClientRpc();
+            UpdateSmokeBasedOnHealthRpc();
         }
     }
 

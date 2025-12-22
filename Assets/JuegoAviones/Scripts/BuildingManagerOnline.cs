@@ -2,7 +2,7 @@ using UnityEngine;
 using Unity.Netcode;
 using Unity.Netcode.Components;
 using System.Collections;
-public class BuildingManager : NetworkBehaviour
+public class BuildingManagerOnline : NetworkBehaviour
 {
     public override void OnNetworkSpawn()
     {

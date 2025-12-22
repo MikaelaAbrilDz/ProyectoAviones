@@ -420,37 +420,9 @@ public class PlayerControllerLocal : MonoBehaviour
     private void UpdateSmokeBasedOnHealth()
     {
         if (isDead || smokeInstances == null) return;
-        
-        // Calcular cuántas vidas faltan (asumiendo 3 vidas máximas)
-        int vidasFaltantes = 3 - vidas;
-        
-        Debug.Log($"Actualizando humo. Vidas: {vidas}, Faltantes: {vidasFaltantes}");
-        
-        // Activar/desactivar humos según vidas faltantes
-        for (int i = 0; i < smokeInstances.Length; i++)
-        {
-            if (smokeInstances[i] != null)
-            {
-                if (i < vidasFaltantes)
-                {
-                    // Activar este humo si le faltan suficientes vidas
-                    if (!smokeInstances[i].activeSelf)
-                    {
-                        smokeInstances[i].SetActive(true);
-                        Debug.Log($"Activando humo {i}");
-                    }
-                }
-                else
-                {
-                    // Desactivar este humo si ya no le faltan tantas vidas
-                    if (smokeInstances[i].activeSelf)
-                    {
-                        smokeInstances[i].SetActive(false);
-                        Debug.Log($"Desactivando humo {i}");
-                    }
-                }
-            }
-        }
+
+        if (vidas <= 10) smokeInstances[0].SetActive(true);
+        if (vidas <= 5) smokeInstances[1].SetActive(true);
     }
 
     // Método para detener todos los humos

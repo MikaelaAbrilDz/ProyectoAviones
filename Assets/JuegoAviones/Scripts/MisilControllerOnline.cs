@@ -42,7 +42,7 @@ public class MisilControllerOnline : NetworkBehaviour
         Debug.Log($"Misil impactó con edificio: {buildingCollider.name}");
 
         // Destruir el edificio
-        buildingCollider.GetComponent<BuildingManager>().Collapse();
+        buildingCollider.GetComponent<BuildingManagerOnline>().Collapse();
 
         // Efecto de explosión
         SpawnExplosionEffect(hitPoint);
