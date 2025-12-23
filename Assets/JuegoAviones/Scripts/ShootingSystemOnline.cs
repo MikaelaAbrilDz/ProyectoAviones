@@ -20,32 +20,19 @@ public class ShootingSystemOnline : NetworkBehaviour
     [SerializeField] private GameObject misil;
     [SerializeField] private Transform misilPoint;
     [SerializeField] private float misilSpeed = 20f;
-    [HideInInspector] public int maxMisil = 7;
+    public int maxMisil = 7;
     private int misilAmmount = 7;
 
-    [Header("Configuración de Layers")]
+    [Header("Layers")]
     [SerializeField] private LayerMask hitLayers;
 
-    private AudioSource audioSource;
-    private bool isFiring = false;
-    private float fireDelay;
     private PlayerControllerOnline playerController;
+    private bool isFiring;
+    private float fireDelay;
 
     private void Start()
     {
         playerController = GetComponent<PlayerControllerOnline>();
-
-        if (playerController == null)
-        {
-            Debug.LogError("No se encontró PlayerControllerOnline en el objeto");
-        }
-
-        audioSource = GetComponent<AudioSource>();
-        if (audioSource == null)
-        {
-            audioSource = gameObject.AddComponent<AudioSource>();
-        }
-
         fireDelay = 1f / fireRate;
 
         if (laserLine != null)
@@ -53,198 +40,140 @@ public class ShootingSystemOnline : NetworkBehaviour
             laserLine.positionCount = 2;
             laserLine.enabled = false;
         }
-
-        if (firePoint == null)
-        {
-            Debug.LogError("FirePoint no asignado en ShootingSystemOnline!");
-        }
     }
+
     public int _misilAmmount
     {
-        get { return misilAmmount; }
-        set { misilAmmount = value; }
+        get => misilAmmount;
+        set => misilAmmount = value;
     }
 
     public void StartFiring()
     {
-        if (!isFiring && playerController != null && playerController.life > 0)
-        {
-            isFiring = true;
-            StartCoroutine(FiringCoroutine());
-        }
+        if (!IsOwner || isFiring || playerController.life <= 0) return;
+        isFiring = true;
+        StartCoroutine(FiringCoroutine());
     }
 
     public void StopFiring()
     {
         isFiring = false;
         StopAllCoroutines();
-
-        if (laserLine != null)
-        {
-            laserLine.enabled = false;
-        }
+        if (laserLine != null) laserLine.enabled = false;
     }
 
     private IEnumerator FiringCoroutine()
     {
-        while (isFiring && playerController != null && playerController.life > 0)
+        while (isFiring && playerController.life > 0)
         {
-            ShootLaser();
+            ShootRequestServerRpc();
             yield return new WaitForSeconds(fireDelay);
         }
     }
 
-    private void ShootLaser()
+    // =========================
+    // CLIENTE -> SERVIDOR
+    // =========================
+    [ServerRpc]
+    private void ShootRequestServerRpc(ServerRpcParams rpcParams = default)
     {
-        if (firePoint == null) return;
-
-        RaycastHit hit;
         Vector3 startPos = firePoint.position;
-        Vector3 endPos;
 
-        bool hasHit = Physics.Raycast(startPos, firePoint.forward, out hit, laserRange, hitLayers);
-
-        if (hasHit)
+        if (Physics.Raycast(startPos, firePoint.forward, out RaycastHit hit, laserRange, hitLayers))
         {
-            endPos = hit.point;
-            ProcessHit(hit);
-            ShowImpactParticle(hit.point, hit.normal);
+            ApplyDamage(hit);
+            ShowImpactClientRpc(hit.point, hit.normal);
+            ShowLaserClientRpc(startPos, hit.point);
         }
         else
         {
-            endPos = startPos + firePoint.forward * laserRange;
+            ShowLaserClientRpc(startPos, startPos + firePoint.forward * laserRange);
         }
 
-        ShowBulletTrail(startPos, endPos);
-        PlayMuzzleFlash();
-        StartCoroutine(ShowLaserBriefly(startPos, endPos));
+        ShowMuzzleClientRpc();
     }
 
-    private void PlayMuzzleFlash()
+    // =========================
+    // DAÑO (SOLO SERVIDOR)
+    // =========================
+    private void ApplyDamage(RaycastHit hit)
     {
-        if (muzzleFlash == null) return;
+        PlayerControllerOnline target =
+            hit.collider.GetComponentInParent<PlayerControllerOnline>();
 
-        ParticleSystem muzzleInstance = Instantiate(muzzleFlash, firePoint.position, firePoint.rotation);
-        muzzleInstance.transform.parent = firePoint;
-        muzzleInstance.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-        muzzleInstance.Clear();
-        muzzleInstance.Play(true);
-        Destroy(muzzleInstance.gameObject, muzzleInstance.main.duration + 0.1f);
+        if (target == null) return;
+
+        if (hit.collider.CompareTag("Alas"))
+            target.TakeDamage(2);
+        else if (hit.collider.CompareTag("Cabina"))
+            target.TakeDamage(4);
     }
 
-    private void ShowBulletTrail(Vector3 startPos, Vector3 endPos)
+    // =========================
+    // FX PARA TODOS
+    // =========================
+    [ClientRpc]
+    private void ShowImpactClientRpc(Vector3 point, Vector3 normal)
     {
-        if (bulletTrailParticle != null)
-        {
-            Vector3 direction = (endPos - startPos).normalized;
-            float distance = Vector3.Distance(startPos, endPos);
+        if (impactParticle == null) return;
 
-            ParticleSystem trailInstance = Instantiate(bulletTrailParticle, startPos, Quaternion.LookRotation(direction));
+        ParticleSystem p =
+            Instantiate(impactParticle, point, Quaternion.LookRotation(normal));
 
-            var mainModule = trailInstance.main;
-            mainModule.startLifetime = distance / mainModule.startSpeed.constant;
-
-            trailInstance.Play();
-            Destroy(trailInstance.gameObject, mainModule.startLifetime.constant + 1f);
-        }
+        p.Play();
+        Destroy(p.gameObject, p.main.duration + 1f);
     }
 
-    private void ShowImpactParticle(Vector3 impactPoint, Vector3 impactNormal)
+    [ClientRpc]
+    private void ShowLaserClientRpc(Vector3 start, Vector3 end)
     {
-        if (impactParticle != null)
-        {
-            ParticleSystem impactInstance = Instantiate(impactParticle, impactPoint, Quaternion.LookRotation(impactNormal));
-            impactInstance.Play();
-            Destroy(impactInstance.gameObject, impactInstance.main.duration + 1f);
-        }
+        if (laserLine == null) return;
+
+        laserLine.SetPosition(0, start);
+        laserLine.SetPosition(1, end);
+        laserLine.enabled = true;
+        StartCoroutine(HideLaser());
     }
 
-    private IEnumerator ShowLaserBriefly(Vector3 startPos, Vector3 endPos)
+    private IEnumerator HideLaser()
     {
-        if (laserLine != null)
-        {
-            laserLine.SetPosition(0, startPos);
-            laserLine.SetPosition(1, endPos);
-            laserLine.enabled = true;
-
-            yield return new WaitForSeconds(laserDuration);
-
-            laserLine.enabled = false;
-        }
+        yield return new WaitForSeconds(laserDuration);
+        if (laserLine != null) laserLine.enabled = false;
     }
 
-    private void ProcessHit(RaycastHit hit)
+    [ClientRpc]
+    private void ShowMuzzleClientRpc()
     {
-        PlayerControllerOnline targetPlayer = hit.collider.GetComponentInParent<PlayerControllerOnline>();
+        if (muzzleFlash == null || firePoint == null) return;
 
-        if (targetPlayer != null && targetPlayer != this.playerController)
-        {
-            if (hit.collider.CompareTag("Alas"))
-            {
-                targetPlayer.TakeDamage(2);
-            }
-            if (hit.collider.CompareTag("Cabina"))
-            {
-                targetPlayer.TakeDamage(4);
-            }
-        }
+        ParticleSystem p =
+            Instantiate(muzzleFlash, firePoint.position, firePoint.rotation, firePoint);
+
+        p.Play();
+        Destroy(p.gameObject, p.main.duration + 0.2f);
     }
 
+    // =========================
+    // MISIL (YA ESTABA BIEN)
+    // =========================
     public void ShootMisil()
     {
-        if (_misilAmmount > 0 && playerController != null && playerController.life > 0)
-        {
-            _misilAmmount--;
-
-            if (!IsServer)
-            {
-                ShootMisilRpc();
-                return;
-            }
-
-            GameObject misilInstanciado = Instantiate(misil, misilPoint.position, transform.rotation);
-            misilInstanciado.GetComponent<NetworkObject>().Spawn();
-            // Configurar el misil
-            MisilControllerOnline misilController = misilInstanciado.GetComponent<MisilControllerOnline>();
-            if (misilController != null)
-            {
-                // Puedes configurar parámetros específicos aquí si es necesario
-            }
-
-        }
+        if (_misilAmmount <= 0 || playerController.life <= 0) return;
+        _misilAmmount--;
+        ShootMisilServerRpc();
     }
-    [Rpc(SendTo.Server, RequireOwnership = false)]
-    private void ShootMisilRpc()
+
+    [ServerRpc]
+    private void ShootMisilServerRpc()
     {
-        GameObject misilInstanciado = Instantiate(misil, misilPoint.position, misilPoint.rotation);
-        misilInstanciado.GetComponent<NetworkObject>().Spawn();
-        misilInstanciado.GetComponent<MisilControllerOnline>().shooter = gameObject;
-        // Configurar el misil
-        MisilControllerOnline misilController = misilInstanciado.GetComponent<MisilControllerOnline>();
-        if (misilController != null)
-        {
-            // Puedes configurar parámetros específicos aquí si es necesario
-        }
+        GameObject misilInst =
+            Instantiate(misil, misilPoint.position, misilPoint.rotation);
+
+        misilInst.GetComponent<NetworkObject>().Spawn();
     }
 
-    public void SetLaserConfig(float newFireRate, float newRange, float newDamage)
-    {
-        fireRate = newFireRate;
-        fireDelay = 1f / fireRate;
-        laserRange = newRange;
-    }
-
-    new void OnDestroy()
+    private void OnDestroy()
     {
         StopAllCoroutines();
-    }
-
-    private void OnDrawGizmosSelected()
-    {
-        if (firePoint != null)
-        {
-            Gizmos.color = Color.red;
-            Gizmos.DrawRay(firePoint.position, firePoint.forward * laserRange);
-        }
     }
 }
