@@ -4,8 +4,6 @@ using Unity.Cinemachine;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.SceneManagement;
-using static UnityEngine.Rendering.DebugUI;
 
 public class PlayerControllerOnline : NetworkBehaviour
 {
@@ -69,6 +67,11 @@ public class PlayerControllerOnline : NetworkBehaviour
 
     private ParticleSystem engineParticleInstance;
     GameObject enviroInstanced;
+
+    [SerializeField] LayerMask mainCamMask_p0;
+    [SerializeField] LayerMask mainCamMask_p1;
+    [SerializeField] LayerMask uiCamMask_p0;
+    [SerializeField] LayerMask uiCamMask_p1;
     public int life
     {
         get
@@ -130,9 +133,10 @@ public class PlayerControllerOnline : NetworkBehaviour
 
     private void InitializeCamera()
     {
+            cameraObj = Instantiate(cameraPrefab);
+        Camera mainCam = cameraObj.GetComponentInChildren<Camera>();
         if (cameraPrefab != null && camFollowed != null)
         {
-            cameraObj = Instantiate(cameraPrefab);
             foreach (var camera in cameraObj.GetComponentsInChildren<CinemachineCamera>())
             {
                 camera.Target.TrackingTarget = camFollowed;
@@ -141,7 +145,6 @@ public class PlayerControllerOnline : NetworkBehaviour
             }
 
             // Configurar cámara para el jugador
-            Camera mainCam = cameraObj.GetComponentInChildren<Camera>();
             if (mainCam != null)
             {
                 GetComponent<PlayerInput>().camera = mainCam;
@@ -152,6 +155,38 @@ public class PlayerControllerOnline : NetworkBehaviour
             if (pointerManager != null)
             {
                 pointer = pointerManager.pointerTrnsfm;
+            }
+        }
+        if (IsServer)
+        {
+            mainCam.cullingMask = mainCamMask_p0;
+            foreach (var cam in mainCam.GetComponentsInChildren<Camera>())
+            {
+                if (cam.name == "PointerCam") cam.cullingMask = uiCamMask_p0;
+            }
+            foreach (var cross in cross.GetComponentsInChildren<Transform>())
+            {
+                cross.gameObject.layer = LayerMask.NameToLayer("Cross_P0");
+            }
+            foreach (var pointer in pointer.GetComponentsInChildren<Transform>())
+            {
+                pointer.gameObject.layer = LayerMask.NameToLayer("3DUI_P0");
+            }
+        }
+        else
+        {
+            mainCam.cullingMask = mainCamMask_p1;
+            foreach (var cam in mainCam.GetComponentsInChildren<Camera>())
+            {
+                if (cam.name == "PointerCam") cam.cullingMask = uiCamMask_p1;
+            }
+            foreach (var cross in cross.GetComponentsInChildren<Transform>())
+            {
+                cross.gameObject.layer = LayerMask.NameToLayer("Cross_P1");
+            }
+            foreach (var pointer in pointer.GetComponentsInChildren<Transform>())
+            {
+                pointer.gameObject.layer = LayerMask.NameToLayer("3DUI_P1");
             }
         }
     }
@@ -221,53 +256,6 @@ public class PlayerControllerOnline : NetworkBehaviour
             pointer.rotation = Quaternion.LookRotation(otherPlayer.transform.position - transform.position);
     }
 
-    public void AtJoining(OutputChannels channel, LayerMask layerMain, LayerMask layerUI, int playerID)
-    {
-        if (!IsOwner) return;
-
-        // Esta función parece ser para configuración específica de splitscreen
-        // La mantenemos por compatibilidad pero la funcionalidad principal está en InitializeCamera()
-        if (cameraObj != null)
-        {
-            foreach (var camera in cameraObj.GetComponentsInChildren<CinemachineCamera>())
-            {
-                camera.OutputChannel = channel;
-            }
-
-            Camera mainCam = cameraObj.GetComponentInChildren<Camera>();
-            if (mainCam != null)
-            {
-                mainCam.cullingMask = layerMain;
-                foreach (var cam in mainCam.GetComponentsInChildren<Camera>())
-                {
-                    if (cam.name == "PointerCam") cam.cullingMask = layerUI;
-                }
-            }
-
-            var brain = cameraObj.GetComponentInChildren<CinemachineBrain>();
-            if (brain != null)
-            {
-                brain.ChannelMask = channel;
-            }
-
-            // Configuración de layers para crosshair y pointer
-            if (cross != null)
-            {
-                foreach (var crossTransform in cross.GetComponentsInChildren<Transform>())
-                {
-                    crossTransform.gameObject.layer = LayerMask.NameToLayer(playerID == 0 ? "Cross_P0" : "Cross_P1");
-                }
-            }
-
-            if (pointer != null)
-            {
-                foreach (var pointerTransform in pointer.GetComponentsInChildren<Transform>())
-                {
-                    pointerTransform.gameObject.layer = LayerMask.NameToLayer(playerID == 0 ? "3DUI_P0" : "3DUI_P1");
-                }
-            }
-        }
-    }
 
     private void Movement()
     {
