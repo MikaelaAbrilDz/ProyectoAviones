@@ -41,6 +41,7 @@ public class LoginManager : MonoBehaviour
                 {
                     resultText.text = "Login successful!";
                     Accounts.id = response.id;
+                    Accounts.logged = true;
                     yield return new WaitForSeconds(0.5f);
                     canvasToDeactivate.SetActive(false);
                 }
