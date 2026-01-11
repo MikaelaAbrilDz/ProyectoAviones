@@ -9,11 +9,17 @@ public class MisilControllerOnline : NetworkBehaviour
     [SerializeField] private float explosionRadius = 5f;
     [SerializeField] private GameObject explosionEffect;
     private float misilSpeed = 150f;
-    public GameObject shooter;
+    public int shooter;
+
+    public void SetShooter(int player)
+    {
+        shooter = player;
+        print("Misil seteado a personaje: " + shooter);
+    }
 
     private void Start()
     {
-        shooter = Physics.OverlapSphere(transform.position, 2, playerLayer)[0].transform.parent.gameObject;
+        //shooter = Physics.OverlapSphere(transform.position, 2, playerLayer)[0].transform.parent.gameObject;
 
         // Destruir el misil después de un tiempo por si no colisiona
         Invoke(nameof(DestroyMissile), 10f);
@@ -53,7 +59,9 @@ public class MisilControllerOnline : NetworkBehaviour
 
     private void HandlePlayerCollision(Collider playerCollider, Vector3 hitPoint)
     {
-        if (playerCollider != null && playerCollider.gameObject.GetComponentInParent<PlayerControllerOnline>().gameObject != shooter)
+        print("PERSONAJE AL QUE HAN DISPARADO: " + playerCollider.gameObject.GetComponentInParent<PlayerControllerOnline>().shooterId);
+        print("PERSONAJE QUE HA DISPARADO: " + shooter);
+        if (playerCollider != null && playerCollider.gameObject.GetComponentInParent<PlayerControllerOnline>().shooterId != shooter)
         {
             if (playerCollider.CompareTag("Alas") || playerCollider.CompareTag("Cabina"))
             {
@@ -82,7 +90,7 @@ public class MisilControllerOnline : NetworkBehaviour
     {
         if (explosionEffect != null)
         {
-            if (shooter.GetComponent<PlayerControllerOnline>().IsServer)
+            if (IsServer)
             {
                 SpawnExplosionEffectClientRpc(position);
                 return;
@@ -103,7 +111,7 @@ public class MisilControllerOnline : NetworkBehaviour
 
     private void DestroyMissile()
     {
-        if (shooter.GetComponent<PlayerControllerOnline>().IsServer)
+        if (IsServer)
         {
             DestroyMissileClientRpc();
             return;

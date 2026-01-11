@@ -17,7 +17,7 @@ public class HostClientMenuManager : MonoBehaviour
     [SerializeField] TMP_InputField enteredCode;
     private void Update()
     {
-        if (NetworkManager.Singleton.ConnectedClientsList.Count == 2) EndSelection();        
+        if (NetworkManager.Singleton && NetworkManager.Singleton.ConnectedClientsList.Count == 2) EndSelection();        
     }
     public void OpenHostOptions()
     {

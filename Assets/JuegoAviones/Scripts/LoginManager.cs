@@ -35,14 +35,13 @@ public class LoginManager : MonoBehaviour
             else
             {
                 string responseText = www.downloadHandler.text;
-                print(responseText);
                 LoginResponse response = JsonUtility.FromJson<LoginResponse>(responseText);
                 if (responseText.Contains("success"))
                 {
                     resultText.text = "Login successful!";
                     Accounts.id = response.id;
                     Accounts.logged = true;
-                    yield return new WaitForSeconds(0.5f);
+                    yield return new WaitForSecondsRealtime(0.5f);
                     canvasToDeactivate.SetActive(false);
                 }
                 else

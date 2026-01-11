@@ -6,9 +6,11 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
 
-public class OnlineResetUI : MonoBehaviour
+public class OnlineResetUI : NetworkBehaviour
 {
-    public GameObject button;
+    public GameObject button, button2, canvas;
+
+
     public void PlayAgain()
     {
         PlayerControllerOnline[] players = FindObjectsByType<PlayerControllerOnline>(FindObjectsInactive.Include, FindObjectsSortMode.None);
@@ -20,20 +22,20 @@ public class OnlineResetUI : MonoBehaviour
     }
     public void Giveup()
     {
-        EndGameRpc();
+       if (IsServer) CloseGameRpc();
+        else EndGameRpc();
     }
 
     [Rpc(SendTo.Server, RequireOwnership = false)]
     void EndGameRpc()
     {
-        StartCoroutine(EndGameCo());
         CloseGameRpc();
     }
 
     [Rpc(SendTo.ClientsAndHost, RequireOwnership = false)]
     void CloseGameRpc()
     {
-        SceneManager.LoadScene(0);
+        StartCoroutine(EndGameCo());
     }
     IEnumerator EndGameCo()
     {
@@ -45,5 +47,7 @@ public class OnlineResetUI : MonoBehaviour
             yield return www.SendWebRequest();
         }
         NetworkManager.Singleton.Shutdown();
+        yield return new WaitForEndOfFrame();
+        SceneManager.LoadScene(0);
     }
 }

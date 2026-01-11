@@ -65,6 +65,8 @@ public class PlayerControllerOnline : NetworkBehaviour
     bool isTurboActive = false;
     bool isFastTurnActive = false;
 
+    public int shooterId;
+
     private ParticleSystem engineParticleInstance;
     GameObject enviroInstanced;
 
@@ -82,7 +84,7 @@ public class PlayerControllerOnline : NetworkBehaviour
         {
             if (networkLifes.Value > 0 && value <= 0)
             {
-                DestroyAirplaneClientRpc();
+                DestroyAirplane();
             }
 
             if (!IsServer) UpdateLifeRpc(value);
@@ -101,6 +103,18 @@ public class PlayerControllerOnline : NetworkBehaviour
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
+
+        if (IsOwner)
+        {
+            if (IsServer)
+            {
+                shooterId = 6;
+            }
+            else
+            {
+                shooterId = 7;
+            }
+        }
 
         if (IsServer && IsOwner && enviroInstanced == null)
         {
@@ -419,40 +433,7 @@ public class PlayerControllerOnline : NetworkBehaviour
 
     public void DestroyAirplane()
     {
-        if (IsServer)
-        {
-            DestroyAirplaneClientRpc();
-            return;
-        }
-
-        isDead = true;
-
-        if (engineParticleInstance != null)
-        {
-            engineParticleInstance.Pause();
-        }
-
-        // Detener todos los humos al morir
-        StopAllSmoke();
-
-        if (isFiring && shootingSystem != null)
-        {
-            shootingSystem.StopFiring();
-            isFiring = false;
-        }
-
-        if (explosionEffect != null)
-            Instantiate(explosionEffect, transform.position, transform.rotation);
-
-
-        visual.SetActive(false);
-
-        foreach (var collider in GetComponentsInChildren<Collider>())
-        {
-            collider.enabled = false;
-        }
-
-        Invoke("AskForRestart", 1f);
+        DestroyAirplaneClientRpc();
     }
 
     [ClientRpc(RequireOwnership = false)]
@@ -490,8 +471,9 @@ public class PlayerControllerOnline : NetworkBehaviour
     private void AskForRestart()
     {
         if (IsServer) FindAnyObjectByType<RestartGameCounter>()._restartCounter = 0;
-        FindAnyObjectByType<OnlineResetUI>(FindObjectsInactive.Include).gameObject.SetActive(true);
+        FindAnyObjectByType<OnlineResetUI>(FindObjectsInactive.Include).canvas.SetActive(true);
         FindAnyObjectByType<OnlineResetUI>(FindObjectsInactive.Include).button.SetActive(true);
+        FindAnyObjectByType<OnlineResetUI>(FindObjectsInactive.Include).button2.SetActive(true);
         Time.timeScale = 0;
     }
     public void RestartGame()
