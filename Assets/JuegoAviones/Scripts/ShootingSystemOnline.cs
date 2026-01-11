@@ -22,7 +22,6 @@ public class ShootingSystemOnline : NetworkBehaviour
     [SerializeField] private float misilSpeed = 20f;
     public int maxMisil = 7;
     private int misilAmmount = 7;
-    public GameObject misilInst;
 
     [Header("Layers")]
     [SerializeField] private LayerMask hitLayers;
@@ -169,16 +168,10 @@ public class ShootingSystemOnline : NetworkBehaviour
     private void ShootMisilServerRpc(int player)
     {
          
-        misilInst = Instantiate(misil, misilPoint.position, misilPoint.rotation);
-        SetShooterRpc(player);
+        GameObject misilInst = Instantiate(misil, misilPoint.position, misilPoint.rotation);
+        misilInst.GetComponent<MisilControllerOnline>().SetShooter(player);
         misilInst.GetComponent<NetworkObject>().Spawn();
 
-    }
-
-    [Rpc(SendTo.ClientsAndHost)]
-    private void SetShooterRpc(int player)
-    {
-        misilInst.GetComponent<MisilControllerOnline>().SetShooter(player);
     }
 
     private void OnDestroy()

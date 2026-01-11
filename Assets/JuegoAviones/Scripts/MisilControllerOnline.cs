@@ -9,12 +9,12 @@ public class MisilControllerOnline : NetworkBehaviour
     [SerializeField] private float explosionRadius = 5f;
     [SerializeField] private GameObject explosionEffect;
     private float misilSpeed = 150f;
-    public int shooter;
+    public NetworkVariable<int> shooter = new NetworkVariable<int>();
 
     public void SetShooter(int player)
     {
-        shooter = player;
-        print("Misil seteado a personaje: " + shooter);
+        shooter.Value = player;
+        print("Misil seteado a personaje: " + shooter.Value);
     }
 
     private void Start()
@@ -61,7 +61,7 @@ public class MisilControllerOnline : NetworkBehaviour
     {
         print("PERSONAJE AL QUE HAN DISPARADO: " + playerCollider.gameObject.GetComponentInParent<PlayerControllerOnline>().shooterId);
         print("PERSONAJE QUE HA DISPARADO: " + shooter);
-        if (playerCollider != null && playerCollider.gameObject.GetComponentInParent<PlayerControllerOnline>().shooterId != shooter)
+        if (playerCollider != null && playerCollider.gameObject.GetComponentInParent<PlayerControllerOnline>().shooterId != shooter.Value)
         {
             if (playerCollider.CompareTag("Alas") || playerCollider.CompareTag("Cabina"))
             {
