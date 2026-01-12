@@ -453,10 +453,13 @@ public class PlayerControllerOnline : NetworkBehaviour
         form.AddField("loser_id", loser);
         form.AddField("death_cause", death.ToString());
 
-        using (UnityWebRequest www = UnityWebRequest.Post("http://localhost/unity_api/add_round.php", form))
+        using (UnityWebRequest www = UnityWebRequest.Post("http://localhost/unity_api/register_round.php", form))
         {
             yield return www.SendWebRequest();
         }
+    }
+    IEnumerator FinishRound(int winner, int loser)
+    {
         NetworkManager.Singleton.Shutdown();
         yield return new WaitForEndOfFrame();
         SceneManager.LoadScene(0);
