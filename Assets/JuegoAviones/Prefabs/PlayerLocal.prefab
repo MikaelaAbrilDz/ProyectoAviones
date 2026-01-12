@@ -12216,7 +12216,7 @@ MonoBehaviour:
   damage: 10
   laserLine: {fileID: 0}
   muzzleFlash: {fileID: 8194992990867289333, guid: 99bc28c0d45f51c4fbac01080b73edc7, type: 3}
-  bulletTrailParticle: {fileID: 0}
+  bulletTrailParticle: {fileID: 763799897560185547, guid: 798157bad7358b04499c9d71cd3c0d9b, type: 3}
   impactParticle: {fileID: 1429954232896169632, guid: 83036083a4ebcd34f98131bd3cf6f4d2, type: 3}
   misil: {fileID: 9003380054984881706, guid: 3e46f1dad458b634091d114635d23cb4, type: 3}
   misilPoint: {fileID: 656357901755721600}
