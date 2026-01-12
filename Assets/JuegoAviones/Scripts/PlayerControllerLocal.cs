@@ -24,8 +24,8 @@ public class PlayerControllerLocal : MonoBehaviour
     public int Vidas => vidas;
 
     [Header("Screen Shake - Disparo")]
-    [SerializeField] float screenShakeAmmount = 0.5f;
-    [SerializeField] float screenShakeFrequency = 6f;
+    [SerializeField] float screenShakeAmmount = 0f; //original 0.5f
+    [SerializeField] float screenShakeFrequency = 0f; //original 6f
 
     [Header("Sistema de Partículas del Motor")]
     [SerializeField] private ParticleSystem engineParticleSystem;

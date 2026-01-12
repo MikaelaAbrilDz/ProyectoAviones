@@ -31,8 +31,8 @@ public class PlayerControllerOnline : NetworkBehaviour
     public int maxLife = 15;
 
     [Header("Screen Shake - Disparo")]
-    [SerializeField] float screenShakeAmmount = 0.5f;
-    [SerializeField] float screenShakeFrequency = 6f;
+    [SerializeField] float screenShakeAmmount = 0f; //original 0.5f
+    [SerializeField] float screenShakeFrequency = 0f; //original 6f
 
     [Header("Configuración Partículas del Motor")]
     [SerializeField] private ParticleSystem engineParticleSystem;
