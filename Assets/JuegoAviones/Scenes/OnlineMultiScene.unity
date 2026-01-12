@@ -7878,8 +7878,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::OnlineResetUI
   ShowTopMostFoldoutHeaderGroup: 1
   button: {fileID: 1977865488}
-  button2: {fileID: 0}
-  canvas: {fileID: 0}
+  button2: {fileID: 1946773428}
+  canvas: {fileID: 25769334}
 --- !u!4 &1952124919
 Transform:
   m_ObjectHideFlags: 0
