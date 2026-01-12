@@ -12093,8 +12093,8 @@ MonoBehaviour:
   cross: {fileID: 8831892675828346128}
   explosionEffect: {fileID: 2433282508537954060, guid: 3ef3ae421f71c5c4e97fe12dc2fc6312, type: 3}
   vidas: 15
-  screenShakeAmmount: 0.5
-  screenShakeFrequency: 6
+  screenShakeAmmount: 0
+  screenShakeFrequency: 0
   engineParticleSystem: {fileID: 8891297334280618237, guid: c4ed38c72957f2241ad144a1614956d9, type: 3}
   enginePosition: {fileID: 2721368220081039348}
   normalEmissionRate: 10

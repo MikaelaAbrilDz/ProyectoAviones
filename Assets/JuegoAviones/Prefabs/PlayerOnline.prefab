@@ -7139,8 +7139,8 @@ MonoBehaviour:
   networkLifes:
     m_InternalValue: 15
   maxLife: 15
-  screenShakeAmmount: 0.5
-  screenShakeFrequency: 6
+  screenShakeAmmount: 0
+  screenShakeFrequency: 0
   engineParticleSystem: {fileID: 8891297334280618237, guid: c4ed38c72957f2241ad144a1614956d9, type: 3}
   enginePosition: {fileID: 3293810478499186173}
   normalEmissionRate: 10
@@ -7157,6 +7157,7 @@ MonoBehaviour:
   - {fileID: 175920209321260896}
   - {fileID: 8766281117107771945}
   isDead: 0
+  shooterId: 0
   mainCamMask_p0:
     serializedVersion: 2
     m_Bits: 2551
