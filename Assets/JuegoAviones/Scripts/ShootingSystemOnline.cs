@@ -105,9 +105,9 @@ public class ShootingSystemOnline : NetworkBehaviour
         if (target == null) return;
 
         if (hit.collider.CompareTag("Alas"))
-            target.TakeDamage(2);
+            target.TakeDamage(2, PlayerControllerOnline.DeathCause.shoot);
         else if (hit.collider.CompareTag("Cabina"))
-            target.TakeDamage(4);
+            target.TakeDamage(4, PlayerControllerOnline.DeathCause.shoot);
     }
 
     // =========================

@@ -71,7 +71,7 @@ public class MisilControllerOnline : NetworkBehaviour
                     PlayerControllerOnline targetPlayer = playerCollider.GetComponentInParent<PlayerControllerOnline>();
                     if (targetPlayer != null)
                     {
-                        targetPlayer.TakeDamage(999);
+                        targetPlayer.TakeDamage(999, PlayerControllerOnline.DeathCause.misile);
                         Debug.Log("Jugador recibió daño de misil. Vida restante: " + targetPlayer.life);
                     }
 

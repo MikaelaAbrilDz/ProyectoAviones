@@ -4,6 +4,10 @@ using Unity.Cinemachine;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Networking;
+using UnityEngine.SceneManagement;
+using System.Collections;
+using System.Collections.Generic;
 
 public class PlayerControllerOnline : NetworkBehaviour
 {
@@ -74,6 +78,12 @@ public class PlayerControllerOnline : NetworkBehaviour
     [SerializeField] LayerMask mainCamMask_p1;
     [SerializeField] LayerMask uiCamMask_p0;
     [SerializeField] LayerMask uiCamMask_p1;
+
+    public enum DeathCause
+    {
+        building, misile, shoot
+    }
+    DeathCause deathCause;
     public int life
     {
         get
@@ -421,7 +431,7 @@ public class PlayerControllerOnline : NetworkBehaviour
             if (Physics.Raycast(ray, out hit, raycastDistance, buildingLayerMask))
             {
                 Debug.DrawRay(origin.position, origin.forward * raycastDistance, Color.red);
-                TakeDamage(999);
+                TakeDamage(999, PlayerControllerOnline.DeathCause.building);
                 return;
             }
             else
@@ -434,6 +444,22 @@ public class PlayerControllerOnline : NetworkBehaviour
     public void DestroyAirplane()
     {
         DestroyAirplaneClientRpc();
+    }
+    IEnumerator FinishRound(int winner, int loser, DeathCause death)
+    {
+        WWWForm form = new WWWForm();
+        form.AddField("round_id", 1);
+        form.AddField("winner_id", winner);
+        form.AddField("loser_id", loser);
+        form.AddField("death_cause", death.ToString());
+
+        using (UnityWebRequest www = UnityWebRequest.Post("http://localhost/unity_api/add_round.php", form))
+        {
+            yield return www.SendWebRequest();
+        }
+        NetworkManager.Singleton.Shutdown();
+        yield return new WaitForEndOfFrame();
+        SceneManager.LoadScene(0);
     }
 
     [ClientRpc(RequireOwnership = false)]
@@ -474,6 +500,28 @@ public class PlayerControllerOnline : NetworkBehaviour
         FindAnyObjectByType<OnlineResetUI>(FindObjectsInactive.Include).canvas.SetActive(true);
         FindAnyObjectByType<OnlineResetUI>(FindObjectsInactive.Include).button.SetActive(true);
         FindAnyObjectByType<OnlineResetUI>(FindObjectsInactive.Include).button2.SetActive(true);
+
+        PlayerControllerOnline[] players = FindObjectsByType<PlayerControllerOnline>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        int idLoser = 0, idWinner = 0;
+        DeathCause death = 0;
+        foreach (PlayerControllerOnline p in players)
+        {
+            if (p.IsOwner)
+            {
+                if (p.isDead)
+                {
+                    idLoser = Accounts.id;
+                    death = deathCause;
+                }
+                else idWinner = Accounts.id;
+                p.speed = 10f;
+                p.isTurboActive = false;
+                if (p.speedCam != null) p.speedCam.Priority = -1;
+                p.ApplyNormalParticleEffects();
+            }
+        }
+        if (IsServer) StartCoroutine(FinishRound(idWinner, idLoser, death));
+
         Time.timeScale = 0;
     }
     public void RestartGame()
@@ -532,9 +580,10 @@ public class PlayerControllerOnline : NetworkBehaviour
 
     }
 
-    public void TakeDamage(int damage)
+    public void TakeDamage(int damage, DeathCause cause)
     {
         if (isDead) return;
+        deathCause = cause;
         if (!IsServer)
         {
             TakeDamageServerRpc(damage);
@@ -654,7 +703,7 @@ public class PlayerControllerOnline : NetworkBehaviour
     {
         if (IsServer)
         {
-            networkLifes.Value = 3;
+            networkLifes.Value = maxLife;
             UpdateSmokeBasedOnHealthRpc();
         }
     }
