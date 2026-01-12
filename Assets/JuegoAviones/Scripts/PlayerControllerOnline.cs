@@ -448,7 +448,6 @@ public class PlayerControllerOnline : NetworkBehaviour
     IEnumerator FinishRound(int winner, int loser, DeathCause death)
     {
         WWWForm form = new WWWForm();
-        form.AddField("round_id", 1);
         form.AddField("winner_id", winner);
         form.AddField("loser_id", loser);
         form.AddField("death_cause", death.ToString());
