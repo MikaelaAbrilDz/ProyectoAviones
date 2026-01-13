@@ -235,7 +235,7 @@ Transform:
   m_GameObject: {fileID: 1130626533110073316}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.01, y: 0, z: 3.79}
+  m_LocalPosition: {x: 0, y: -0.4, z: 3.226}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -7335,7 +7335,7 @@ MonoBehaviour:
   laserDuration: 0.1
   laserLine: {fileID: 4222939324739490593}
   muzzleFlash: {fileID: 8194992990867289333, guid: 99bc28c0d45f51c4fbac01080b73edc7, type: 3}
-  bulletTrailParticle: {fileID: 0}
+  bulletTrailParticle: {fileID: 763799897560185547, guid: 798157bad7358b04499c9d71cd3c0d9b, type: 3}
   impactParticle: {fileID: 1429954232896169632, guid: 83036083a4ebcd34f98131bd3cf6f4d2, type: 3}
   misil: {fileID: 9003380054984881706, guid: 8ae740c93d33cea499f74d16fa6dbf10, type: 3}
   misilPoint: {fileID: 2769714703000853477}
