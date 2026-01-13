@@ -64,12 +64,14 @@ public class PlayerControllerOnline : NetworkBehaviour
     float speed = 10f;
     int maxInclination = 50;
     float inclinationSpeed = 100f;
-    [HideInInspector] public bool isDead = false;
+    [HideInInspector] public NetworkVariable<bool> isDead = new NetworkVariable<bool>(false);
     bool isFiring = false;
     bool isTurboActive = false;
     bool isFastTurnActive = false;
 
     public int shooterId;
+
+    public NetworkVariable<int> networkId = new NetworkVariable<int>(1);
 
     private ParticleSystem engineParticleInstance;
     GameObject enviroInstanced;
@@ -85,7 +87,7 @@ public class PlayerControllerOnline : NetworkBehaviour
         building, misile, shoot
     }
     DeathCause deathCause;
-    float secondsOfRound;
+    float secondsOfRound = 0f;
     public int life
     {
         get
@@ -112,12 +114,16 @@ public class PlayerControllerOnline : NetworkBehaviour
         networkLifes.Value = value; //ASIGNA EL VALOR
     }
 
+    
+
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
 
         if (IsOwner)
         {
+            networkId.Value = Accounts.id;
+
             if (IsServer)
             {
                 shooterId = 6;
@@ -273,7 +279,7 @@ public class PlayerControllerOnline : NetworkBehaviour
 
     void Update()
     {
-        if (!IsOwner || isDead) return;
+        if (!IsOwner || isDead.Value) return;
         
         secondsOfRound += Time.deltaTime;
         
@@ -307,14 +313,14 @@ public class PlayerControllerOnline : NetworkBehaviour
 
     private void OnMove(InputValue movementValue)
     {
-        if (!IsOwner || isDead) return;
+        if (!IsOwner || isDead.Value) return;
         rotation.x = movementValue.Get<Vector2>().x;
         rotation.y = movementValue.Get<Vector2>().y;
     }
 
     private void OnFastTurn(InputValue fastTurnValue)
     {
-        if (!IsOwner || isDead) return;
+        if (!IsOwner || isDead.Value) return;
 
         if (fastTurnValue.isPressed && !isFastTurnActive)
         {
@@ -328,7 +334,7 @@ public class PlayerControllerOnline : NetworkBehaviour
 
     private void OnTurbo(InputValue turbo)
     {
-        if (!IsOwner || isDead) return;
+        if (!IsOwner || isDead.Value) return;
 
         if (turbo.isPressed && !isTurboActive && !isFastTurnActive)
         {
@@ -378,7 +384,7 @@ public class PlayerControllerOnline : NetworkBehaviour
 
     private void OnAttack_0(InputValue attack)
     {
-        if (!IsOwner || isDead) return;
+        if (!IsOwner || isDead.Value) return;
 
         if (attack.isPressed && !isFiring)
         {
@@ -414,7 +420,7 @@ public class PlayerControllerOnline : NetworkBehaviour
 
     private void OnAttack_1(InputValue attack1)
     {
-        if (!IsOwner || isDead) return;
+        if (!IsOwner || isDead.Value) return;
 
         if (attack1.isPressed)
         {
@@ -458,11 +464,12 @@ public class PlayerControllerOnline : NetworkBehaviour
         form.AddField("death_x", deathPos.x.ToString("F3"));
         form.AddField("death_y", deathPos.y.ToString("F3"));
         form.AddField("death_z", deathPos.z.ToString("F3"));
-        form.AddField("round_duration", secondsOfRound.ToString("F0"));
+        form.AddField("round_duration", (int)secondsOfRound);
 
         using (UnityWebRequest www = UnityWebRequest.Post("http://localhost/unity_api/register_round.php", form))
         {
             yield return www.SendWebRequest();
+            //print(www.result.ToString());
         }
     }
     IEnumerator FinishRound(int winner, int loser)
@@ -475,7 +482,7 @@ public class PlayerControllerOnline : NetworkBehaviour
     [ClientRpc(RequireOwnership = false)]
     void DestroyAirplaneClientRpc()
     {
-        isDead = true;
+        isDead.Value = true;
 
         if (engineParticleInstance != null)
         {
@@ -512,28 +519,36 @@ public class PlayerControllerOnline : NetworkBehaviour
         FindAnyObjectByType<OnlineResetUI>(FindObjectsInactive.Include).button2.SetActive(true);
 
         PlayerControllerOnline[] players = FindObjectsByType<PlayerControllerOnline>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-        int idLoser = 0, idWinner = 0;
+        int idLoser = 1, idWinner = 1;
         DeathCause death = 0;
         Vector3 deathPos = Vector3.zero;
-        foreach (PlayerControllerOnline p in players)
+        if (IsServer) foreach (PlayerControllerOnline p in players)
         {
-            if (p.IsOwner)
+            if (p.isDead.Value)
             {
-                if (p.isDead)
-                {
-                    idLoser = Accounts.id;
-                    death = deathCause;
-                    deathPos = transform.position;
-                }
-                else idWinner = Accounts.id;
-                p.speed = 10f;
-                p.isTurboActive = false;
-                if (p.speedCam != null) p.speedCam.Priority = -1;
-                p.ApplyNormalParticleEffects();
+                print("Personaje muerto)");
+                idLoser = p.networkId.Value;
+                death = deathCause;
+                deathPos = p.transform.position;
             }
-        }
-        if (IsServer) StartCoroutine(FinishRound(idWinner, idLoser, death, deathPos));
+            else
+            {
+                print("Personaje Vivo)");
+                idWinner = p.networkId.Value;
+                
+            }
+            p.speed = 10f;
+            p.isTurboActive = false;
+            if (p.speedCam != null) p.speedCam.Priority = -1;
+            p.ApplyNormalParticleEffects();
 
+        }
+        if (IsServer)
+        {
+            StartCoroutine(FinishRound(idWinner, idLoser, death, deathPos));
+           
+            print(idWinner + " / " + idLoser);
+        }
         Time.timeScale = 0;
     }
     public void RestartGame()
@@ -565,7 +580,7 @@ public class PlayerControllerOnline : NetworkBehaviour
             life = maxLife;
         }
         if (engineParticleInstance != null) engineParticleInstance.Play();
-        isDead = false;
+        isDead.Value = false;
         visual.SetActive(true);
         foreach (var collider in GetComponentsInChildren<Collider>())
         {
@@ -583,7 +598,7 @@ public class PlayerControllerOnline : NetworkBehaviour
             otherPlayerScript.life = otherPlayerScript.maxLife;
         }
         if (otherPlayerScript.engineParticleInstance != null) engineParticleInstance.Play(); otherPlayerScript.engineParticleInstance.Play();
-        otherPlayerScript.isDead = false;
+        otherPlayerScript.isDead.Value = false;
         otherPlayerScript.visual.SetActive(true);
         foreach (var collider in otherPlayerScript.GetComponentsInChildren<Collider>())
         {
@@ -594,7 +609,7 @@ public class PlayerControllerOnline : NetworkBehaviour
 
     public void TakeDamage(int damage, DeathCause cause)
     {
-        if (isDead) return;
+        if (isDead.Value) return;
         deathCause = cause;
         if (!IsServer)
         {
@@ -608,7 +623,7 @@ public class PlayerControllerOnline : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     void TakeDamageServerRpc(int damage)
     {
-        if (isDead) return;
+        if (isDead.Value) return;
 
         life -= damage;
     }
@@ -638,7 +653,7 @@ public class PlayerControllerOnline : NetworkBehaviour
 
     public void DañoAla()
     {
-        if (isDead) return;
+        if (isDead.Value) return;
 
         if (!IsServer)
         {
@@ -660,7 +675,7 @@ public class PlayerControllerOnline : NetworkBehaviour
 
     public void DañoCabina()
     {
-        if (isDead) return;
+        if (isDead.Value) return;
 
         if (!IsServer)
         {
