@@ -79,11 +79,13 @@ public class PlayerControllerOnline : NetworkBehaviour
     [SerializeField] LayerMask uiCamMask_p0;
     [SerializeField] LayerMask uiCamMask_p1;
 
+
     public enum DeathCause
     {
         building, misile, shoot
     }
     DeathCause deathCause;
+    float secondsOfRound;
     public int life
     {
         get
@@ -272,7 +274,9 @@ public class PlayerControllerOnline : NetworkBehaviour
     void Update()
     {
         if (!IsOwner || isDead) return;
-
+        
+        secondsOfRound += Time.deltaTime;
+        
         Movement();
         CheckForBuildings();
 
@@ -454,6 +458,7 @@ public class PlayerControllerOnline : NetworkBehaviour
         form.AddField("death_x", deathPos.x.ToString("F3"));
         form.AddField("death_y", deathPos.y.ToString("F3"));
         form.AddField("death_z", deathPos.z.ToString("F3"));
+        form.AddField("round_duration", secondsOfRound.ToString("F0"));
 
         using (UnityWebRequest www = UnityWebRequest.Post("http://localhost/unity_api/register_round.php", form))
         {
