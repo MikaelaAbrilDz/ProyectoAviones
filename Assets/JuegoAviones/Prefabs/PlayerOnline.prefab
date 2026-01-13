@@ -492,7 +492,7 @@ Transform:
   m_GameObject: {fileID: 3733049619966835719}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -8.83}
+  m_LocalPosition: {x: 0, y: 0.6, z: -9.73}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1903,7 +1903,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0.3}
   m_SizeDelta: {x: 1, y: 1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &4100951707717528936
@@ -1934,7 +1934,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: db7aaa162a1a5a54b826d15b5b20fb06, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 663d4d607f11c3c4d8484505623df31e, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -7156,8 +7156,11 @@ MonoBehaviour:
   smokeParticles:
   - {fileID: 175920209321260896}
   - {fileID: 8766281117107771945}
-  isDead: 0
+  isDead:
+    m_InternalValue: 0
   shooterId: 0
+  networkId:
+    m_InternalValue: 1
   mainCamMask_p0:
     serializedVersion: 2
     m_Bits: 2551
@@ -7456,7 +7459,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: db7aaa162a1a5a54b826d15b5b20fb06, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 663d4d607f11c3c4d8484505623df31e, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
