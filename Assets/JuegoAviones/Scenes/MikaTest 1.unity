@@ -312,7 +312,6 @@ MonoBehaviour:
   velocidad: 0.5
   alturaMovimiento: 2
   derivaLateral: 1
-  posicionInicial: {x: 0, y: 0, z: 0}
 --- !u!1 &345135931
 GameObject:
   m_ObjectHideFlags: 0
@@ -914,7 +913,6 @@ MonoBehaviour:
   velocidad: 0.5
   alturaMovimiento: 2
   derivaLateral: 1
-  posicionInicial: {x: 0, y: 0, z: 0}
 --- !u!114 &1193281812 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 917823848624035508, guid: fa329b09f1d6dd343b7d2cb6ec2a8b08, type: 3}
@@ -1114,7 +1112,6 @@ MonoBehaviour:
   velocidad: 0.5
   alturaMovimiento: 2
   derivaLateral: 1
-  posicionInicial: {x: 0, y: 0, z: 0}
 --- !u!4 &1540725423 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 813893419917282547, guid: 9d823d912a0278344a119d0a9851ae49, type: 3}
@@ -1554,6 +1551,7 @@ PrefabInstance:
     m_RemovedGameObjects:
     - {fileID: 4544135593949517992, guid: 107a0e53adcf5c541b6996b1c6182904, type: 3}
     - {fileID: 923600453650039437, guid: 107a0e53adcf5c541b6996b1c6182904, type: 3}
+    - {fileID: 6713897253571330242, guid: 107a0e53adcf5c541b6996b1c6182904, type: 3}
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 7615154135886185128, guid: 107a0e53adcf5c541b6996b1c6182904, type: 3}
       insertIndex: -1
