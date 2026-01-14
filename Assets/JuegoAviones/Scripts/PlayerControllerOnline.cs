@@ -87,7 +87,8 @@ public class PlayerControllerOnline : NetworkBehaviour
         building, misile, shoot
     }
     DeathCause deathCause;
-    float secondsOfRound = 0f;
+    
+    NetworkVariable<float> secondsOfRound = new NetworkVariable<float>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
     public int life
     {
         get
@@ -122,14 +123,14 @@ public class PlayerControllerOnline : NetworkBehaviour
 
         if (IsOwner)
         {
-            networkId.Value = Accounts.id;
-
             if (IsServer)
             {
+                networkId.Value = Accounts.id;
                 shooterId = 6;
             }
             else
             {
+                SetIdRpc(Accounts.id);
                 shooterId = 7;
             }
         }
@@ -163,6 +164,11 @@ public class PlayerControllerOnline : NetworkBehaviour
         FindOtherPlayer();
     }
 
+    [Rpc(SendTo.Server)]
+    private void SetIdRpc(int id)
+    {
+        networkId.Value = id;
+    }
     private void InitializeCamera()
     {
             cameraObj = Instantiate(cameraPrefab);
@@ -279,9 +285,11 @@ public class PlayerControllerOnline : NetworkBehaviour
 
     void Update()
     {
+        secondsOfRound.Value += Time.deltaTime;
+
         if (!IsOwner || isDead.Value) return;
         
-        secondsOfRound += Time.deltaTime;
+       
         
         Movement();
         CheckForBuildings();
@@ -453,9 +461,10 @@ public class PlayerControllerOnline : NetworkBehaviour
 
     public void DestroyAirplane()
     {
+        AirplaneDieRpc();
         DestroyAirplaneClientRpc();
     }
-    IEnumerator FinishRound(int winner, int loser, DeathCause death, Vector3 deathPos)
+    IEnumerator FinishRound(int winner, int loser, DeathCause death, Vector3 deathPos, int timer)
     {
         WWWForm form = new WWWForm();
         form.AddField("winner_id", winner);
@@ -464,7 +473,7 @@ public class PlayerControllerOnline : NetworkBehaviour
         form.AddField("death_x", deathPos.x.ToString("F3"));
         form.AddField("death_y", deathPos.y.ToString("F3"));
         form.AddField("death_z", deathPos.z.ToString("F3"));
-        form.AddField("round_duration", (int)secondsOfRound);
+        form.AddField("round_duration", timer);
 
         using (UnityWebRequest www = UnityWebRequest.Post("http://localhost/unity_api/register_round.php", form))
         {
@@ -479,11 +488,16 @@ public class PlayerControllerOnline : NetworkBehaviour
         SceneManager.LoadScene(0);
     }
 
+    [Rpc(SendTo.Server, RequireOwnership = false)]
+    void AirplaneDieRpc()
+    {
+        isDead.Value = true;
+    }
+
     [ClientRpc(RequireOwnership = false)]
     void DestroyAirplaneClientRpc()
     {
-        isDead.Value = true;
-
+ 
         if (engineParticleInstance != null)
         {
             engineParticleInstance.Pause();
@@ -519,7 +533,8 @@ public class PlayerControllerOnline : NetworkBehaviour
         FindAnyObjectByType<OnlineResetUI>(FindObjectsInactive.Include).button2.SetActive(true);
 
         PlayerControllerOnline[] players = FindObjectsByType<PlayerControllerOnline>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-        int idLoser = 1, idWinner = 1;
+        int idLoser = 1, idWinner = 1, timer = (int)secondsOfRound.Value; 
+
         DeathCause death = 0;
         Vector3 deathPos = Vector3.zero;
         if (IsServer) foreach (PlayerControllerOnline p in players)
@@ -545,7 +560,7 @@ public class PlayerControllerOnline : NetworkBehaviour
         }
         if (IsServer)
         {
-            StartCoroutine(FinishRound(idWinner, idLoser, death, deathPos));
+            StartCoroutine(FinishRound(idWinner, idLoser, death, deathPos, timer));
            
             print(idWinner + " / " + idLoser);
         }
