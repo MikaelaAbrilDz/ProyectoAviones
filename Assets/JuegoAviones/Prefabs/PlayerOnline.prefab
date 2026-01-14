@@ -7124,6 +7124,9 @@ MonoBehaviour:
   buildingLayerMask:
     serializedVersion: 2
     m_Bits: 64
+  EndLayerMask:
+    serializedVersion: 2
+    m_Bits: 8192
   raycastDistance: 0.1
   raycastOrigins:
   - {fileID: 834405558251517580}

@@ -2083,6 +2083,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 84067660949200801, guid: 88d30fe1d048df84e94fa2d4a80b6d77, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -213
+      objectReference: {fileID: 0}
+    - target: {fileID: 84067660949200801, guid: 88d30fe1d048df84e94fa2d4a80b6d77, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 601
+      objectReference: {fileID: 0}
     - target: {fileID: 170780111764090335, guid: 88d30fe1d048df84e94fa2d4a80b6d77, type: 3}
       propertyPath: ShapeModule.m_Mesh
       value: 
@@ -2101,11 +2109,11 @@ PrefabInstance:
       objectReference: {fileID: 5213254287531656433, guid: c8ba9e9f5bef3aa4ebe0d3be12d92a3c, type: 3}
     - target: {fileID: 837286187049119554, guid: 88d30fe1d048df84e94fa2d4a80b6d77, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -317
+      value: -360
       objectReference: {fileID: 0}
     - target: {fileID: 837286187049119554, guid: 88d30fe1d048df84e94fa2d4a80b6d77, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -469
+      value: -342
       objectReference: {fileID: 0}
     - target: {fileID: 1077786036795476344, guid: 88d30fe1d048df84e94fa2d4a80b6d77, type: 3}
       propertyPath: m_LocalPosition.x
@@ -2175,6 +2183,14 @@ PrefabInstance:
       propertyPath: ShapeModule.m_Mesh
       value: 
       objectReference: {fileID: -862194015462018963, guid: c8ba9e9f5bef3aa4ebe0d3be12d92a3c, type: 3}
+    - target: {fileID: 3428992463975853246, guid: 88d30fe1d048df84e94fa2d4a80b6d77, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 955
+      objectReference: {fileID: 0}
+    - target: {fileID: 3428992463975853246, guid: 88d30fe1d048df84e94fa2d4a80b6d77, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -429
+      objectReference: {fileID: 0}
     - target: {fileID: 3600554881903365614, guid: 88d30fe1d048df84e94fa2d4a80b6d77, type: 3}
       propertyPath: GlobalObjectIdHash
       value: 2190348352

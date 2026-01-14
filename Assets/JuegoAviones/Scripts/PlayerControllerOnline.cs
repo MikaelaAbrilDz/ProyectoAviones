@@ -13,6 +13,7 @@ public class PlayerControllerOnline : NetworkBehaviour
 {
     [SerializeField] CinemachineCamera speedCam;
     [SerializeField] LayerMask buildingLayerMask;
+    [SerializeField] LayerMask EndLayerMask;
     [SerializeField] float raycastDistance = 10f;
     [SerializeField] Transform[] raycastOrigins;
     [SerializeField] Transform camFollowed;
@@ -447,6 +448,12 @@ public class PlayerControllerOnline : NetworkBehaviour
             RaycastHit hit;
 
             if (Physics.Raycast(ray, out hit, raycastDistance, buildingLayerMask))
+            {
+                Debug.DrawRay(origin.position, origin.forward * raycastDistance, Color.red);
+                TakeDamage(999, PlayerControllerOnline.DeathCause.building);
+                return;
+            }
+            else if (Physics.Raycast(ray, out hit, raycastDistance, EndLayerMask))
             {
                 Debug.DrawRay(origin.position, origin.forward * raycastDistance, Color.red);
                 TakeDamage(999, PlayerControllerOnline.DeathCause.building);

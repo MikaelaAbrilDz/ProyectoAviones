@@ -8,6 +8,7 @@ public class PlayerControllerLocal : MonoBehaviour
 {
     [SerializeField] CinemachineCamera speedCam;
     [SerializeField] LayerMask buildingLayerMask;
+    [SerializeField] LayerMask EndLayerMask;
     [SerializeField] float raycastDistance = 10f;
     [SerializeField] Transform[] raycastOrigins;
     [SerializeField] Transform camFollowed;
@@ -363,6 +364,12 @@ public class PlayerControllerLocal : MonoBehaviour
             RaycastHit hit;
 
             if (Physics.Raycast(ray, out hit, raycastDistance, buildingLayerMask))
+            {
+                Debug.DrawRay(origin.position, origin.forward * raycastDistance, Color.red);
+                DestroyAirplane();
+                return;
+            }
+            else if (Physics.Raycast(ray, out hit, raycastDistance, EndLayerMask))
             {
                 Debug.DrawRay(origin.position, origin.forward * raycastDistance, Color.red);
                 DestroyAirplane();

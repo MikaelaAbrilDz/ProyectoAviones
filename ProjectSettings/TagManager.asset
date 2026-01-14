@@ -9,6 +9,7 @@ TagManager:
   - Misil
   - Alas
   - Cabina
+  - FxTemporaire
   layers:
   - Default
   - TransparentFX
@@ -23,7 +24,7 @@ TagManager:
   - 3DUI_P1
   - Cross_P0
   - Cross_P1
-  - 
+  - End
   - 
   - 
   - 
