@@ -215267,8 +215267,10 @@ MonoBehaviour:
   text: {fileID: 1815057398}
   canvas: {fileID: 253522996}
   spawnPoints:
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 509313206}
+  - {fileID: 1215609237}
+  - {fileID: 260299326}
+  - {fileID: 568455993}
   mainCamMask_p0:
     serializedVersion: 2
     m_Bits: 2551
