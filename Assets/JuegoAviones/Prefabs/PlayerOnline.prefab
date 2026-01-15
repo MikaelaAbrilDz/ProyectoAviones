@@ -7094,7 +7094,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 4251323593
+  GlobalObjectIdHash: 2472026281
   InScenePlacedSourceGlobalObjectIdHash: 4251323593
   DeferredDespawnTick: 0
   Ownership: 1
@@ -7124,6 +7124,9 @@ MonoBehaviour:
   buildingLayerMask:
     serializedVersion: 2
     m_Bits: 64
+  EndLayerMask:
+    serializedVersion: 2
+    m_Bits: 8192
   raycastDistance: 0.1
   raycastOrigins:
   - {fileID: 834405558251517580}

@@ -79,20 +79,28 @@ public class ShootingSystemOnline : NetworkBehaviour
     private void ShootRequestServerRpc(ServerRpcParams rpcParams = default)
     {
         Vector3 startPos = firePoint.position;
+        Vector3 direction = firePoint.forward;
 
-        if (Physics.Raycast(startPos, firePoint.forward, out RaycastHit hit, laserRange, hitLayers))
+        if (Physics.Raycast(startPos, direction, out RaycastHit hit, laserRange, hitLayers))
         {
             ApplyDamage(hit);
             ShowImpactClientRpc(hit.point, hit.normal);
             ShowLaserClientRpc(startPos, hit.point);
+
+            ShowBulletTrailClientRpc(startPos, hit.point, direction);
         }
         else
         {
-            ShowLaserClientRpc(startPos, startPos + firePoint.forward * laserRange);
+            Vector3 endPos = startPos + direction * laserRange;
+
+            ShowLaserClientRpc(startPos, endPos);
+
+            ShowBulletTrailClientRpc(startPos, endPos, direction);
         }
 
         ShowMuzzleClientRpc();
     }
+
 
     // =========================
     // DAÑO (SOLO SERVIDOR)
@@ -178,4 +186,36 @@ public class ShootingSystemOnline : NetworkBehaviour
     {
         StopAllCoroutines();
     }
+
+    // =========================
+    // BULLET TRAIL (FX ONLINE)
+    // =========================
+
+    [ClientRpc]
+    private void ShowBulletTrailClientRpc(
+    Vector3 startPos,
+    Vector3 endPos,
+    Vector3 direction)
+    {
+        if (bulletTrailParticle == null) return;
+
+        float distance = Vector3.Distance(startPos, endPos);
+
+        ParticleSystem trailInstance =
+            Instantiate(bulletTrailParticle, startPos, Quaternion.LookRotation(direction));
+
+        var mainModule = trailInstance.main;
+
+        float speed = mainModule.startSpeed.constant;
+        if (speed <= 0.01f)
+            speed = 50f;
+
+        mainModule.startLifetime = distance / speed;
+
+        trailInstance.Play();
+        Destroy(trailInstance.gameObject, mainModule.startLifetime.constant + 1f);
+    }
+
+
+
 }
