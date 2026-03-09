@@ -1,9 +1,11 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using Unity.Netcode;
 using Unity.Netcode.Components;
 
 public class MisilControllerOnline : NetworkBehaviour
 {
+    private ulong missileOwnerId;
+    private NetworkObject ownerNetObject;
     [SerializeField] private LayerMask buildingLayer, playerLayer;
     [SerializeField] private float explosionForce = 10f;
     [SerializeField] private float explosionRadius = 5f;
@@ -13,9 +15,14 @@ public class MisilControllerOnline : NetworkBehaviour
 
     private void Start()
     {
-        shooter = Physics.OverlapSphere(transform.position, 2, playerLayer)[0].transform.parent.gameObject;
+      
 
-        // Destruir el misil después de un tiempo por si no colisiona
+       
+
+        shooter = Physics.OverlapSphere(transform.position, 2, playerLayer)[0].transform.parent.gameObject;
+        //ownerNetObject = shooter.GetComponent<NetworkObject>();
+        missileOwnerId = shooter.GetComponent<NetworkObject>().OwnerClientId;
+        // Destruir el misil despuÐ¹s de un tiempo por si no colisiona
         Invoke(nameof(DestroyMissile), 10f);
     }
 
@@ -23,7 +30,7 @@ public class MisilControllerOnline : NetworkBehaviour
     {
         transform.position += transform.forward * Time.deltaTime * misilSpeed;
 
-        // Detección de colisiones por raycast (más preciso)
+        // DetecciÑƒn de colisiones por raycast (mÐ±s preciso)
         RaycastHit hitBuilding;
         if (Physics.Raycast(transform.position, transform.forward, out hitBuilding, 1, buildingLayer))
         {
@@ -39,12 +46,12 @@ public class MisilControllerOnline : NetworkBehaviour
 
     private void HandleBuildingCollision(Collider buildingCollider, Vector3 hitPoint)
     {
-        Debug.Log($"Misil impactó con edificio: {buildingCollider.name}");
+        Debug.Log($"Misil impactÑƒ con edificio: {buildingCollider.name}");
 
         // Destruir el edificio
         buildingCollider.GetComponent<BuildingManagerOnline>().Collapse();
 
-        // Efecto de explosión
+        // Efecto de explosiÑƒn
         SpawnExplosionEffect(hitPoint);
 
         // Destruir el misil
@@ -57,18 +64,25 @@ public class MisilControllerOnline : NetworkBehaviour
         {
             if (playerCollider.CompareTag("Alas") || playerCollider.CompareTag("Cabina"))
             {
-                Debug.Log("Misil impactó en jugador");
+                Debug.Log("Misil impactÑƒ en jugador");
 
-
-                    PlayerControllerOnline targetPlayer = playerCollider.GetComponentInParent<PlayerControllerOnline>();
-                    if (targetPlayer != null)
+                Debug.Log("HOLAT2");
+                PlayerControllerOnline targetPlayer = playerCollider.GetComponentInParent<PlayerControllerOnline>();
+                Debug.Log("HOLAT3");
+                if (targetPlayer != null)
                     {
-                        targetPlayer.TakeDamage(999);
-                        Debug.Log("Jugador recibió daño de misil. Vida restante: " + targetPlayer.life);
-                    }
+                    Debug.Log("HOLAT4");
+                    targetPlayer.TakeDamage(999, missileOwnerId);
+                        Debug.Log(missileOwnerId);
+                    
+                }
+                    else
+                {
+                    Debug.Log("HOLATT");
+                }
 
 
-                // Efecto de explosión
+                // Efecto de explosiÑƒn
                 SpawnExplosionEffect(hitPoint);
 
                 // Destruir el misil
@@ -121,7 +135,7 @@ public class MisilControllerOnline : NetworkBehaviour
         Destroy(gameObject);
     }
 
-    // Método para configurar el misil desde el sistema de disparo
+    // MÐ¹todo para configurar el misil desde el sistema de disparo
     public void SetMissileParameters(float speed, LayerMask buildingMask, LayerMask playerMask)
     {
         misilSpeed = speed;

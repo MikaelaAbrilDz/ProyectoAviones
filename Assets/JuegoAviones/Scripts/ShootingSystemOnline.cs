@@ -4,6 +4,7 @@ using System.Collections;
 
 public class ShootingSystemOnline : NetworkBehaviour
 {
+    private NetworkObject ownerNetObject;
     [Header("Configuración Láser Metralleta")]
     [SerializeField] private Transform firePoint;
     [SerializeField] private float fireRate = 10f;
@@ -181,11 +182,15 @@ public class ShootingSystemOnline : NetworkBehaviour
         {
             if (hit.collider.CompareTag("Alas"))
             {
-                targetPlayer.TakeDamage(2);
+                
+                
+                targetPlayer.TakeDamage(2, ownerNetObject.NetworkObjectId);
+                Debug.Log(ownerNetObject);
             }
             if (hit.collider.CompareTag("Cabina"))
             {
-                targetPlayer.TakeDamage(4);
+                
+                targetPlayer.TakeDamage(4, ownerNetObject.NetworkObjectId);
             }
         }
     }

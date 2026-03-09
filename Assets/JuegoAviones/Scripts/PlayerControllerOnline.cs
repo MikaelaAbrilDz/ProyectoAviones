@@ -1,7 +1,8 @@
-using System;
+Ôªøusing System;
 using System.Globalization;
 using Unity.Cinemachine;
 using Unity.Netcode;
+using UnityEditor.PackageManager;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
@@ -9,6 +10,7 @@ using static UnityEngine.Rendering.DebugUI;
 
 public class PlayerControllerOnline : NetworkBehaviour
 {
+    ScoreManager scoreManager;
     [SerializeField] CinemachineCamera speedCam;
     [SerializeField] LayerMask buildingLayerMask;
     [SerializeField] float raycastDistance = 10f;
@@ -32,23 +34,23 @@ public class PlayerControllerOnline : NetworkBehaviour
     [SerializeField] float screenShakeAmmount = 0.5f;
     [SerializeField] float screenShakeFrequency = 6f;
 
-    [Header("ConfiguraciÛn PartÌculas del Motor")]
+    [Header("Configuraci—Én Part–Ωculas del Motor")]
     [SerializeField] private ParticleSystem engineParticleSystem;
     [SerializeField] private Transform enginePosition;
 
-    [Header("ConfiguraciÛn PartÌculas - Normal")]
+    [Header("Configuraci—Én Part–Ωculas - Normal")]
     public float normalEmissionRate = 15f;
     public float normalStartSpeed = 8f;
     public float normalStartSize = 0.3f;
     public float normalStartLifetime = 0.3f;
 
-    [Header("ConfiguraciÛn PartÌculas - Turbo")]
+    [Header("Configuraci—Én Part–Ωculas - Turbo")]
     public float turboEmissionRate = 30f;
     public float turboStartSpeed = 20f;
     public float turboStartSize = 0.6f;
     public float turboStartLifetime = 0.4f;
 
-    [Header("ConfiguraciÛn Fast Turn")]
+    [Header("Configuraci—Én Fast Turn")]
     [SerializeField] private float fastTurnSpeedMultiplier = 0.3f;
     [SerializeField] private float fastTurnRotationMultiplier = 3f;
 
@@ -69,6 +71,7 @@ public class PlayerControllerOnline : NetworkBehaviour
 
     private ParticleSystem engineParticleInstance;
     GameObject enviroInstanced;
+   
     public int life
     {
         get
@@ -95,8 +98,21 @@ public class PlayerControllerOnline : NetworkBehaviour
         networkLifes.Value = value; //ASIGNA EL VALOR
     }
 
+    void Start()
+    {
+        //scoreManager = FindAnyObjectByType<ScoreManager>();
+        if (scoreManager == null)
+        {
+            Debug.LogError("ScoreManager missing in the scene!");
+        }
+        if (scoreManager != null)
+        {
+            Debug.LogError("ScoreManager found in the scene!");
+        }
+    }
     public override void OnNetworkSpawn()
     {
+        scoreManager = FindAnyObjectByType<ScoreManager>();
         base.OnNetworkSpawn();
 
         if (IsServer && IsOwner && enviroInstanced == null)
@@ -123,7 +139,7 @@ public class PlayerControllerOnline : NetworkBehaviour
             return;
         }
 
-        // Solo el owner inicializa la c·mara y busca otros jugadores
+        // Solo el owner inicializa la c–±mara y busca otros jugadores
         InitializeCamera();
         FindOtherPlayer();
     }
@@ -140,7 +156,7 @@ public class PlayerControllerOnline : NetworkBehaviour
                 if (camera.name == "PlayerCamSpeed") speedCam = camera;
             }
 
-            // Configurar c·mara para el jugador
+            // Configurar c–±mara para el jugador
             Camera mainCam = cameraObj.GetComponentInChildren<Camera>();
             if (mainCam != null)
             {
@@ -210,8 +226,13 @@ public class PlayerControllerOnline : NetworkBehaviour
         }
     }
 
-    void Update()
+    private void Update()
     {
+        if (Keyboard.current.rKey.wasPressedThisFrame)
+        {
+            speed = 0;
+            Debug.Log("–†—â–¥—Ñ");
+        }
         if (!IsOwner || isDead) return;
 
         Movement();
@@ -225,8 +246,8 @@ public class PlayerControllerOnline : NetworkBehaviour
     {
         if (!IsOwner) return;
 
-        // Esta funciÛn parece ser para configuraciÛn especÌfica de splitscreen
-        // La mantenemos por compatibilidad pero la funcionalidad principal est· en InitializeCamera()
+        // Esta funci—Én parece ser para configuraci—Én espec–Ωfica de splitscreen
+        // La mantenemos por compatibilidad pero la funcionalidad principal est–± en InitializeCamera()
         if (cameraObj != null)
         {
             foreach (var camera in cameraObj.GetComponentsInChildren<CinemachineCamera>())
@@ -250,7 +271,7 @@ public class PlayerControllerOnline : NetworkBehaviour
                 brain.ChannelMask = channel;
             }
 
-            // ConfiguraciÛn de layers para crosshair y pointer
+            // Configuraci—Én de layers para crosshair y pointer
             if (cross != null)
             {
                 foreach (var crossTransform in cross.GetComponentsInChildren<Transform>())
@@ -419,7 +440,7 @@ public class PlayerControllerOnline : NetworkBehaviour
             if (Physics.Raycast(ray, out hit, raycastDistance, buildingLayerMask))
             {
                 Debug.DrawRay(origin.position, origin.forward * raycastDistance, Color.red);
-                TakeDamage(999);
+                TakeDamage(999, OwnerClientId);
                 return;
             }
             else
@@ -562,24 +583,28 @@ public class PlayerControllerOnline : NetworkBehaviour
 
     }
 
-    public void TakeDamage(int damage)
+    public void TakeDamage(int damage, ulong attackerId)
     {
         if (isDead) return;
-        if (!IsServer)
-        {
-            TakeDamageServerRpc(damage);
-            return;
-        }
-
-        life -= damage;
+        Debug.Log(attackerId);
+        // Toda la l√≥gica va al servidor, que es la √∫nica fuente de verdad
+        TakeDamageServerRpc(damage, attackerId);
     }
 
     [ServerRpc(RequireOwnership = false)]
-    void TakeDamageServerRpc(int damage)
+    void TakeDamageServerRpc(int damage, ulong attackerId)
     {
+        Debug.Log(attackerId);
         if (isDead) return;
+        Debug.Log(attackerId);
+        life -= damage; // El setter de 'life' ya llama DestroyAirplaneClientRpc si llega a 0
 
-        life -= damage;
+        if (life <= 0)
+        {
+            Debug.Log(attackerId);
+            Debug.Log("ScoreManager ref: " + scoreManager);
+            scoreManager.AddScore(attackerId);
+        }
     }
 
     [Rpc(SendTo.ClientsAndHost, RequireOwnership = false)]
@@ -591,7 +616,7 @@ public class PlayerControllerOnline : NetworkBehaviour
         if (life <= 5) smokeParticles[1].SetActive(true);
     }
 
-    // MÈtodo para detener todos los humos
+    // M–πtodo para detener todos los humos
     private void StopAllSmoke()
     {
         if (smokeParticles == null) return;
@@ -605,50 +630,50 @@ public class PlayerControllerOnline : NetworkBehaviour
         }
     }
 
-    public void DaÒoAla()
+    public void Da—ÅoAla()
     {
         if (isDead) return;
 
         if (!IsServer)
         {
-            DaÒoAlaServerRpc();
+            Da—ÅoAlaServerRpc();
             return;
         }
 
         life--;
-        Debug.Log($"DaÒo al ala! Vidas restantes: {life}");
+        Debug.Log($"Da—Åo al ala! Vidas restantes: {life}");
 
     }
 
     [ServerRpc(RequireOwnership = false)]
-    void DaÒoAlaServerRpc()
+    void Da—ÅoAlaServerRpc()
     {
         life--;
         UpdateSmokeBasedOnHealthRpc();
     }
 
-    public void DaÒoCabina()
+    public void Da—ÅoCabina()
     {
         if (isDead) return;
 
         if (!IsServer)
         {
-            DaÒoCabinaServerRpc();
+            Da—ÅoCabinaServerRpc();
             return;
         }
 
         life -= 2;
-        Debug.Log($"DaÒo a la cabina! Vidas restantes: {life}");
+        Debug.Log($"Da—Åo a la cabina! Vidas restantes: {life}");
     }
 
     [ServerRpc(RequireOwnership = false)]
-    void DaÒoCabinaServerRpc()
+    void Da—ÅoCabinaServerRpc()
     {
         life -= 2;
         UpdateSmokeBasedOnHealthRpc();
     }
 
-    // M…TODOS DE DEBUG - Puedes llamarlos desde el Inspector
+    // M–ôTODOS DE DEBUG - Puedes llamarlos desde el Inspector
     [ContextMenu("Probar Humo Nivel 1")]
     public void TestSmokeLevel1()
     {
