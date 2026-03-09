@@ -535,7 +535,7 @@ public class PlayerControllerOnline : NetworkBehaviour
             RestartGameClientRpc();
         }
 
-        AddCounterServerRpc();
+         
     }
 
     [ServerRpc(RequireOwnership = false)]

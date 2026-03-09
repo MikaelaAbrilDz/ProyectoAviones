@@ -1,21 +1,27 @@
+
+    
 using UnityEngine;
 using UnityEngine.Networking;
 using System.Collections;
 
-public class SendScoreToDatabase : MonoBehaviour
+public class SendMatchToDatabase : MonoBehaviour
 {
-    public string url = "http://localhost/juego_aviones/guardar_score.php";
+    public string url = "http://localhost/unity_api/php/update_score.php";
 
-    public void SendScore(string playerName, int score)
+    public void SendMatch(int matchNumber, string player1, string player2, int score1, int score2)
     {
-        StartCoroutine(SendScoreCoroutine(playerName, score));
+        StartCoroutine(SendMatchCoroutine(matchNumber, player1, player2, score1, score2));
     }
 
-    IEnumerator SendScoreCoroutine(string playerName, int score)
+    IEnumerator SendMatchCoroutine(int matchNumber, string player1, string player2, int score1, int score2)
     {
         WWWForm form = new WWWForm();
-        form.AddField("nombre", playerName);
-        form.AddField("score", score);
+
+        form.AddField("numeroPartida", matchNumber);
+        form.AddField("jugador1", player1);
+        form.AddField("jugador2", player2);
+        form.AddField("score1", score1);
+        form.AddField("score2", score2);
 
         UnityWebRequest www = UnityWebRequest.Post(url, form);
 
@@ -27,7 +33,7 @@ public class SendScoreToDatabase : MonoBehaviour
         }
         else
         {
-            Debug.Log("Respuesta servidor: " + www.downloadHandler.text);
+            Debug.Log("Servidor: " + www.downloadHandler.text);
         }
     }
 }
